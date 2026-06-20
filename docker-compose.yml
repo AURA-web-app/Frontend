@@ -1,0 +1,21 @@
+services:
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+      - SUBDOMAINS=aura-web
+      - TOKEN=5d22f78a-6017-4e5d-82e8-45d56500c7a3
+      - UPDATE_IP=ipv4
+    restart: unless-stopped
+
+  webserver:
+    image: nginx:alpine
+    container_name: web_pages
+    ports:
+      - "80:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    restart: unless-stopped
