@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { motion, useScroll } from "framer-motion";
 import styles from "../../../style/pricing.module.css";
 
-// ---------- Animated Grid ----------
 const AnimatedGrid = () => {
     return (
         <div className={styles.animatedGrid}>
@@ -14,7 +13,6 @@ const AnimatedGrid = () => {
     );
 };
 
-// ---------- Floating Particles ----------
 const Particles = () => {
     return (
         <div className={styles.particles}>
@@ -50,7 +48,6 @@ const Particles = () => {
     );
 };
 
-// ---------- Spotlight follows mouse ----------
 const useSpotlight = () => {
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -65,7 +62,6 @@ const useSpotlight = () => {
     }, []);
 };
 
-// ---------- Temporary donation modal ----------
 const useDonationPopup = () => {
     const [showPopup, setShowPopup] = useState(false);
 
@@ -87,7 +83,6 @@ export default function PricingPage() {
 
     return (
         <div className={styles.page}>
-            {/* Kill double scrollbar */}
             <style jsx global>{`
                 html,
                 body {
@@ -97,8 +92,6 @@ export default function PricingPage() {
 
             <AnimatedGrid />
             <Particles />
-
-            {/* Hero */}
             <section className={styles.hero}>
                 <div className={styles.heroContent}>
                     <motion.h1
