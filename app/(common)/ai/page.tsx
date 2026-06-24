@@ -119,7 +119,7 @@ export default function AIChat() {
                         <button className="panel-toggle-btn" onClick={() => setFlawOpen(!flawOpen)}>
                             FLAW
                         </button>
-                        <a href="/pricing" className="pricing-btn">Pricing</a>
+                        <a href="/ai/pricing" className="pricing-btn">Pricing</a>
                     </div>
                 </div>
                 <p>Ask anything about your subjects, exams, or study plans</p>
