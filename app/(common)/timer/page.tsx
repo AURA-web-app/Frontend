@@ -2,219 +2,343 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "../../style/timer.css";
-import CustomCursor from "../../cursor";
 
-const SESSION_GOAL = 1500; // 25 minutes in seconds
-const CIRCUMFERENCE = 2 * Math.PI * 70;
+const TOTAL_DAY_SECONDS = 86400;
+const CIRCLE_RADIUS_RATIO = 0.78;
+const STROKE_WIDTH_RATIO = 0.09;
+
+interface Session {
+    start: number;
+    end: number | null;
+}
+
+interface LeaderboardEntry {
+    name: string;
+    totalToday: number;
+}
 
 export default function Timer() {
-    const [time, setTime] = useState(0);
-    const [isRunning, setIsRunning] = useState(false);
-    const [laps, setLaps] = useState<{ id: number; duration: number }[]>([]);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [sessions, setSessions] = useState<Session[]>([]);
+    const [currentSessionStart, setCurrentSessionStart] = useState<number | null>(null);
+    const [elapsed, setElapsed] = useState(0);
     const [leaderboardOpen, setLeaderboardOpen] = useState(false);
-    const [guestName, setGuestName] = useState("");
-    const [totalToday, setTotalToday] = useState(0);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [guestId, setGuestId] = useState<string>("");
+    const [username, setUsername] = useState<string>("");
+    const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+    const [liveTime, setLiveTime] = useState(new Date());
+    const animFrameRef = useRef<number>(0);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+
+    useEffect(() => {
+        const storedSessions = localStorage.getItem("aura-study-sessions");
+        if (storedSessions) {
+            const parsed: Session[] = JSON.parse(storedSessions);
+            const ongoing = parsed.find((s) => s.end === null);
+            setSessions(parsed);
+            if (ongoing) setCurrentSessionStart(ongoing.start);
+        }
+
+        const storedGuestId = localStorage.getItem("aura-guest-id");
+        if (storedGuestId) {
+            setGuestId(storedGuestId);
+        } else {
+            const counter = parseInt(localStorage.getItem("aura-guest-counter") || "0", 10) + 1;
+            localStorage.setItem("aura-guest-counter", counter.toString());
+            const newId = `Guest #${counter}`;
+            localStorage.setItem("aura-guest-id", newId);
+            setGuestId(newId);
+        }
+
+        const storedUsername = localStorage.getItem("aura-username");
+        if (storedUsername) setUsername(storedUsername);
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem("aura-study-sessions", JSON.stringify(sessions));
+    }, [sessions]);
+
+    useEffect(() => {
+        const timer = setInterval(() => setLiveTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const todayMidnight = new Date();
+        todayMidnight.setHours(0, 0, 0, 0);
+        const todayStart = todayMidnight.getTime();
+
+        const userTotal = sessions.reduce((acc, s) => {
+            if (s.start >= todayStart || (s.end && s.end >= todayStart)) {
+                const start = Math.max(s.start, todayStart);
+                const end = s.end ? Math.min(s.end, Date.now()) : Date.now();
+                return acc + Math.max(0, (end - start) / 1000);
+            }
+            return acc;
+        }, 0);
+
+        const displayName = username || guestId;
+
+        const hardcoded: LeaderboardEntry[] = [
+            { name: "Alex", totalToday: 45900 },
+            { name: "Jordan", totalToday: 34200 },
+            { name: "Taylor", totalToday: 26100 },
+            { name: "Morgan", totalToday: 21000 },
+            { name: "Casey", totalToday: 15600 },
+        ];
+
+        const combined = [...hardcoded];
+        if (userTotal > 0) {
+            const existingIndex = combined.findIndex((e) => e.name === displayName);
+            if (existingIndex >= 0) {
+                combined[existingIndex].totalToday = userTotal;
+            } else {
+                combined.push({ name: displayName, totalToday: userTotal });
+            }
+        }
+
+        combined.sort((a, b) => b.totalToday - a.totalToday);
+        setLeaderboardData(combined.slice(0, 8));
+    }, [sessions, username, guestId]);
+
+    const animate = useCallback(() => {
+        drawCanvas();
+        if (currentSessionStart) {
+            setElapsed(Math.floor((Date.now() - currentSessionStart) / 1000));
+        }
+        animFrameRef.current = requestAnimationFrame(animate);
+    }, [currentSessionStart, sessions]);
+
+    useEffect(() => {
+        animFrameRef.current = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animFrameRef.current);
+    }, [animate]);
+
+    const drawCanvas = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+
+        const w = rect.width;
+        const h = rect.height;
+        const centerX = w / 2;
+        const centerY = h / 2;
+        const radius = (Math.min(w, h) * CIRCLE_RADIUS_RATIO) / 2;
+        const lineWidth = Math.min(w, h) * STROKE_WIDTH_RATIO;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setHours(0, 0, 0, 0);
+        const secondsSinceMidnight = (now.getTime() - midnight.getTime()) / 1000;
+        const currentAngle = (secondsSinceMidnight / TOTAL_DAY_SECONDS) * 2 * Math.PI - Math.PI / 2;
+        const idleGradient = ctx.createLinearGradient(centerX - radius, centerY, centerX + radius, centerY);
+        idleGradient.addColorStop(0, "#00d2ff");
+        idleGradient.addColorStop(1, "#0ea5e9");
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, -Math.PI / 2, currentAngle, false);
+        ctx.strokeStyle = idleGradient;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        const timestampToAngle = (ts: number) => {
+            const d = new Date(ts);
+            const secs = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds() + d.getMilliseconds() / 1000;
+            return (secs / TOTAL_DAY_SECONDS) * 2 * Math.PI - Math.PI / 2;
+        };
+
+        const studyGradient = ctx.createLinearGradient(centerX - radius, centerY, centerX + radius, centerY);
+        studyGradient.addColorStop(0, "#ef4444");
+        studyGradient.addColorStop(1, "#f97316");
+
+        for (const s of sessions) {
+            const startAngle = timestampToAngle(s.start);
+            let endAngle = s.end ? timestampToAngle(s.end) : currentAngle;
+            if (endAngle < startAngle) endAngle += 2 * Math.PI;
+            if (startAngle > currentAngle) continue;
+            const drawEnd = Math.min(endAngle, currentAngle);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, startAngle, drawEnd, false);
+            ctx.strokeStyle = studyGradient;
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = "butt";
+            ctx.stroke();
+        }
+
+        const dotX = centerX + radius * Math.cos(currentAngle);
+        const dotY = centerY + radius * Math.sin(currentAngle);
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, lineWidth * 0.65, 0, 2 * Math.PI);
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = "rgba(255,255,255,0.9)";
+        ctx.shadowBlur = 18;
+        ctx.fill();
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+    };
+
+    const toggleSession = () => {
+        if (currentSessionStart === null) {
+            const start = Date.now();
+            setCurrentSessionStart(start);
+            setSessions((prev) => [...prev, { start, end: null }]);
+        } else {
+            const end = Date.now();
+            setSessions((prev) =>
+                prev.map((s) =>
+                    s.start === currentSessionStart && s.end === null ? { ...s, end } : s
+                )
+            );
+            setCurrentSessionStart(null);
+            setElapsed(0);
+        }
+    };
+
+    const formatDuration = (seconds: number) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    };
+
+    const completedSessions = sessions
+        .filter((s) => s.end !== null)
+        .sort((a, b) => b.start - a.start)
+        .slice(0, 5);
+
+    const isRunning = currentSessionStart !== null;
 
     const touchStartX = useRef(0);
-    const touchStartY = useRef(0);
-
-    // Load guest & today's total
-    useEffect(() => {
-        const storedName = localStorage.getItem("aura-guest-name");
-        if (storedName) {
-            setGuestName(storedName);
-        } else {
-            const randomId = Math.floor(1000 + Math.random() * 9000);
-            const name = `Guest${randomId}`;
-            localStorage.setItem("aura-guest-name", name);
-            setGuestName(name);
-        }
-
-        const todayKey = new Date().toISOString().split("T")[0];
-        const storedToday = localStorage.getItem(`aura-study-${todayKey}`);
-        if (storedToday) setTotalToday(parseInt(storedToday, 10));
-    }, []);
-
-    useEffect(() => {
-        const todayKey = new Date().toISOString().split("T")[0];
-        localStorage.setItem(`aura-study-${todayKey}`, totalToday.toString());
-    }, [totalToday]);
-
-    useEffect(() => {
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-        };
-    }, []);
-
-    const tick = useCallback(() => {
-        setTime((prev) => prev + 1);
-    }, []);
-
-    useEffect(() => {
-        if (isRunning) {
-            timerRef.current = setInterval(tick, 1000);
-        } else if (timerRef.current) {
-            clearInterval(timerRef.current);
-        }
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-        };
-    }, [isRunning, tick]);
-
-    const startTimer = () => setIsRunning(true);
-    const stopTimer = () => {
-        setIsRunning(false);
-        if (time > 0) {
-            const newLap = { id: laps.length + 1, duration: time };
-            setLaps((prev) => [...prev, newLap]);
-            setTotalToday((prev) => prev + time);
-            setTime(0);
-        }
-    };
-    const resetTimer = () => {
-        setIsRunning(false);
-        setTime(0);
-        if (timerRef.current) clearInterval(timerRef.current);
-    };
-
-    // Swipe handlers (open leaderboard on right swipe)
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
-        touchStartY.current = e.touches[0].clientY;
     };
     const handleTouchEnd = (e: React.TouchEvent) => {
         const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-        const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-        if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 60) {
+        if (Math.abs(deltaX) > 60 && deltaX > 0) {
             setLeaderboardOpen(true);
         }
     };
 
-    const sessionProgress = Math.min(time / SESSION_GOAL, 1);
-    const dashOffset = CIRCUMFERENCE * (1 - sessionProgress);
-
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, "0")}`;
-    };
-
-    const formatDaily = (seconds: number) => {
-        const hrs = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        return `${hrs}h ${mins}m`;
-    };
+    const leaderboardContent = (
+        <>
+            <button
+                className="close-leaderboard"
+                onClick={() => setLeaderboardOpen(false)}
+            >
+                ← Close
+            </button>
+            <h2>🏆 Leaderboard</h2>
+            <ul className="leaderboard-list">
+                {leaderboardData.map((entry, idx) => (
+                    <li key={idx}>
+                        <span className="rank">
+                            {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}`}
+                        </span>
+                        <span className="name">{entry.name}</span>
+                        <span className="time">{formatDuration(entry.totalToday)}</span>
+                    </li>
+                ))}
+            </ul>
+            <p className="leaderboard-note">Study more to climb the ranks!</p>
+        </>
+    );
 
     return (
-        <>
-            <CustomCursor />
-            <div className={`leaderboard-panel ${leaderboardOpen ? "open" : ""}`}>
-                <button className="close-leaderboard" onClick={() => setLeaderboardOpen(false)}>
-                    ← Close
-                </button>
-                <h2>🏆 Leaderboard</h2>
-                <ul className="leaderboard-list">
-                    <li>🥇 Alex – 12h 45m</li>
-                    <li>🥈 Jordan – 9h 30m</li>
-                    <li>🥉 Taylor – 7h 15m</li>
-                    <li>4. Morgan – 5h 50m</li>
-                    <li>5. Casey – 4h 20m</li>
-                </ul>
-                <p className="leaderboard-note">Study more to climb the ranks!</p>
-            </div>
-
-            {leaderboardOpen && (
-                <div className="overlay" onClick={() => setLeaderboardOpen(false)} />
+        <div className="timer-wrapper">
+            {!isMobile && (
+                <div className="leaderboard-sidebar">
+                    {leaderboardContent}
+                </div>
             )}
 
-            <div
-                className="timer-container"
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-            >
-                <div className="timer-card">
-                    <div className="guest-badge">
-                        <span className="guest-icon">👤</span>
-                        <span>{guestName}</span>
+            {isMobile && (
+                <>
+                    <div className={`leaderboard-panel ${leaderboardOpen ? "open" : ""}`}>
+                        {leaderboardContent}
                     </div>
-
+                    {leaderboardOpen && (
+                        <div
+                            className="overlay"
+                            onClick={() => setLeaderboardOpen(false)}
+                        />
+                    )}
                     <button
                         className="leaderboard-toggle"
                         onClick={() => setLeaderboardOpen(true)}
                     >
-                        🏆 Leaderboard
+                        🏆
                     </button>
+                </>
+            )}
 
-                    <div className="timer-circle-wrapper">
-                        <svg className="timer-ring" viewBox="0 0 160 160">
-                            {/* Background track */}
-                            <circle
-                                cx="80"
-                                cy="80"
-                                r="70"
-                                fill="none"
-                                stroke="#2d2d2d"
-                                strokeWidth="12"
-                            />
-                            {/* Progress arc */}
-                            <circle
-                                cx="80"
-                                cy="80"
-                                r="70"
-                                fill="none"
-                                stroke={
-                                    sessionProgress >= 1 ? "#f97316" : "#10b981"
-                                }
-                                strokeWidth="12"
-                                strokeLinecap="round"
-                                strokeDasharray={CIRCUMFERENCE}
-                                strokeDashoffset={dashOffset}
-                                transform="rotate(-90 80 80)"
-                                className="progress-ring"
-                            />
-                        </svg>
-                        <div className="timer-text">
-                            <span className="current-time">{formatTime(time)}</span>
-                            <span className="goal-time">/ {formatTime(SESSION_GOAL)}</span>
-                        </div>
+            <div
+                className="timer-container"
+                onTouchStart={isMobile ? handleTouchStart : undefined}
+                onTouchEnd={isMobile ? handleTouchEnd : undefined}
+            >
+                <div className="circle-wrapper">
+                    <canvas ref={canvasRef} className="timer-canvas" />
+                    <div className="circle-center">
+                        <span className="live-clock">
+                            {liveTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        </span>
+                        <span className="live-date">
+                            {liveTime.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}
+                        </span>
+                        <span className="guest-id">{username || guestId}</span>
                     </div>
+                    <button
+                        className={`session-btn ${isRunning ? "stop" : ""}`}
+                        onClick={toggleSession}
+                    >
+                        {isRunning ? "Stop" : "Start"}
+                    </button>
+                </div>
 
-                    <div className="timer-controls">
-                        {!isRunning ? (
-                            <button onClick={startTimer} className="btn btn-start">
-                                Start
-                            </button>
-                        ) : (
-                            <button onClick={stopTimer} className="btn btn-stop">
-                                Stop
-                            </button>
-                        )}
-                        <button onClick={resetTimer} className="btn btn-reset">
-                            Reset
-                        </button>
-                    </div>
-
-                    {/* Daily total */}
-                    <div className="daily-summary">
-                        Today: {formatDaily(totalToday)} studied
-                    </div>
-
-                    {laps.length > 0 && (
-                        <div className="laps-section">
-                            <h3>Sessions</h3>
-                            <ul className="laps-list">
-                                {laps.map((lap) => (
-                                    <li key={lap.id} className="lap-item">
-                                        <span>Session {lap.id}</span>
-                                        <span>{formatTime(lap.duration)}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                <div className="session-list-container">
+                    <h3>Recent Sessions</h3>
+                    {completedSessions.length === 0 && !isRunning && (
+                        <p className="no-session-msg">No sessions recorded today.</p>
+                    )}
+                    {isRunning && (
+                        <div className="live-session">
+                            <span>Active: {formatDuration(elapsed)}</span>
                         </div>
                     )}
+                    <ul className="session-list">
+                        {completedSessions.map((s, i) => (
+                            <li key={i}>
+                                <span>{new Date(s.start).toLocaleTimeString()}</span>
+                                <span>
+                                    {s.end ? formatDuration((s.end - s.start) / 1000) : "ongoing"}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             </div>
-        </>
+        </div>
     );
 }

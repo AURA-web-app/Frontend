@@ -1,5 +1,3 @@
-/* ai.css – fixed header, scrollable chat, sticky input */
-
 .ai-chat-container {
     min-height: 100vh;
     background: var(--bg-deep);
@@ -25,7 +23,6 @@
     opacity: 0.9;
 }
 
-/* Fixed header */
 .ai-chat-header {
     padding: 1.5rem 2rem 1rem;
     text-align: center;
@@ -55,7 +52,6 @@
     margin: 0;
 }
 
-/* Scrollable chat box */
 .ai-chat-box {
     flex: 1;
     overflow-y: auto;
@@ -70,7 +66,6 @@
     z-index: 1;
 }
 
-/* Message bubbles */
 .ai-message {
     display: flex;
     max-width: 75%;
@@ -111,7 +106,6 @@
     border-bottom-left-radius: 8px;
 }
 
-/* Typing indicator */
 .typing-indicator {
     display: flex;
     gap: 4px;
@@ -145,7 +139,6 @@
     30% { transform: translateY(-6px); opacity: 1; }
 }
 
-/* Sticky input bar */
 .ai-chat-input {
     display: flex;
     gap: 0.8rem;
@@ -219,4 +212,136 @@
     .ai-chat-input {
         padding: 1rem 1rem 1.5rem;
     }
+}
+
+.header-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    width: 100%;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.panel-toggle-btn {
+    padding: 0.4rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.03);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(6px);
+}
+
+.panel-toggle-btn:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--accent-green);
+}
+
+.pricing-btn {
+    padding: 0.4rem 1.2rem;
+    background: var(--accent-green);
+    color: #000;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.pricing-btn:hover {
+    background: var(--accent-green-bright);
+    box-shadow: 0 0 15px var(--accent-green-glow);
+}
+
+.side-panel {
+    position: fixed;
+    top: 0;
+    width: 320px;
+    height: 100vh;
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    padding: 2rem 1.5rem;
+    z-index: 110;
+    transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 10px 0 40px rgba(0,0,0,0.5);
+    overflow-y: auto;
+}
+
+.left-panel {
+    left: -340px;
+    border-radius: 0 24px 24px 0;
+}
+
+.left-panel.open {
+    left: 0;
+}
+
+.right-panel {
+    right: -340px;
+    border-radius: 24px 0 0 24px;
+}
+
+.right-panel.open {
+    right: 0;
+}
+
+.close-panel {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.close-panel:hover {
+    color: #fff;
+}
+
+.side-panel h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent-orange);
+    margin-bottom: 1rem;
+}
+
+.side-panel p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.side-panel ul {
+    list-style: none;
+    padding: 0;
+}
+
+.side-panel li {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: #a0a0a0;
+}
+
+.panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 105;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
