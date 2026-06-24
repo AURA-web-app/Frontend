@@ -21,7 +21,10 @@ export default function AIChat() {
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [advModelsOpen, setAdvModelsOpen] = useState(false);
+    const [flawOpen, setFlawOpen] = useState(false);
     const chatBoxRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (chatBoxRef.current) {
             chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
@@ -41,6 +44,7 @@ export default function AIChat() {
         setMessages((prev) => [...prev, userMsg]);
         setInput("");
         setIsTyping(true);
+
         setTimeout(() => {
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -58,6 +62,7 @@ export default function AIChat() {
             handleSend();
         }
     };
+
     const generateAIResponse = (userInput: string): string => {
         const lower = userInput.toLowerCase();
         if (lower.includes("derivative")) {
@@ -72,14 +77,53 @@ export default function AIChat() {
         return "That's a great question! Could you provide a bit more detail so I can help you better?";
     };
 
+    const closeAllPanels = () => {
+        setAdvModelsOpen(false);
+        setFlawOpen(false);
+    };
+
     return (
         <div className="ai-chat-container">
             <CustomCursor />
-            <div className="ai-chat-header">
-                <h1>AI Study Assistant</h1>
-                <p>Ask anything about your subjects, exams, or study plans</p>
+            <div className={`side-panel left-panel ${advModelsOpen ? "open" : ""}`}>
+                <button className="close-panel" onClick={() => setAdvModelsOpen(false)}>← Close</button>
+                <h2>ADV MODELS</h2>
+                <p>Advanced reasoning models with extended context.</p>
+                <ul>
+                    <li>Model Alpha – 128k context</li>
+                    <li>Model Beta – 256k context</li>
+                    <li>Model Gamma – 512k context</li>
+                </ul>
             </div>
 
+            <div className={`side-panel right-panel ${flawOpen ? "open" : ""}`}>
+                <button className="close-panel" onClick={() => setFlawOpen(false)}>Close →</button>
+                <h2>FLAW</h2>
+                <p>Experimental research models. Expect errors.</p>
+                <ul>
+                    <li>Flaw 7k – 7,000 params</li>
+                    <li>Flaw 10k – 10,000 params</li>
+                    <li>Flaw 12k – 12,000 params</li>
+                </ul>
+            </div>
+            {(advModelsOpen || flawOpen) && (
+                <div className="panel-overlay" onClick={closeAllPanels} />
+            )}
+            <div className="ai-chat-header">
+                <div className="header-top-row">
+                    <h1>AI Study Assistant</h1>
+                    <div className="header-actions">
+                        <button className="panel-toggle-btn" onClick={() => setAdvModelsOpen(!advModelsOpen)}>
+                            ADV MODELS
+                        </button>
+                        <button className="panel-toggle-btn" onClick={() => setFlawOpen(!flawOpen)}>
+                            FLAW
+                        </button>
+                        <a href="/pricing" className="pricing-btn">Pricing</a>
+                    </div>
+                </div>
+                <p>Ask anything about your subjects, exams, or study plans</p>
+            </div>
             <div className="ai-chat-box" ref={chatBoxRef}>
                 {messages.map((msg) => (
                     <div
@@ -91,7 +135,6 @@ export default function AIChat() {
                         <p>{msg.content}</p>
                     </div>
                 ))}
-
                 {isTyping && (
                     <div className="ai-message ai-message-ai typing-indicator">
                         <span></span>
@@ -100,7 +143,6 @@ export default function AIChat() {
                     </div>
                 )}
             </div>
-
             <div className="ai-chat-input">
                 <input
                     type="text"
