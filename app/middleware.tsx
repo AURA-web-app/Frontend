@@ -1,4 +1,11 @@
-import { NextResponse } from "next/server";
+export default function midPage() {
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <h1 className="text-3xl font-bold">currently under inspection</h1>
+    </div>
+  )
+}
+/*import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
@@ -50,3 +57,4 @@ export const config = {
     "/admin/:path*",
   ],
 };
+*/
