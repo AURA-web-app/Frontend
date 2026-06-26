@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import CustomCursor from "@/app/cursor";
 import "../../style/ai.css";
 import "../../style/theme.css";
 
@@ -84,7 +83,6 @@ export default function AIChat() {
 
     return (
         <div className="ai-chat-container">
-            <CustomCursor />
             <div className={`side-panel left-panel ${advModelsOpen ? "open" : ""}`}>
                 <button className="close-panel" onClick={() => setAdvModelsOpen(false)}>← Close</button>
                 <h2>ADV MODELS</h2>

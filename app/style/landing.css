@@ -2,7 +2,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  cursor: none !important;
 }
 
 html {
@@ -18,13 +17,6 @@ body {
   overflow-x: hidden;
   line-height: 1.6;
   min-height: 100vh;
-}
-
-html, 
-body, 
-#root, 
-*:not(input):not(textarea) {
-  cursor: none !important;
 }
 
 body::before {
