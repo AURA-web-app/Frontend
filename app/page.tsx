@@ -1,46 +1,14 @@
 "use client";
 
-import CursorComponent from "./cursor";
 import { useEffect } from "react";
 import "./style/theme.css";
 import "./style/landing.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function HomePage() {
     const router = useRouter();
-    const features = [
-        {
-          title: "AI Tutor",
-          icon: "🧠",
-          desc: "Personalized explanations, doubt solving, and adaptive learning paths.",
-        },
-        {
-          title: "Focus Mode",
-          icon: "⚡",
-          desc: "Distraction-free study sessions with deep productivity analytics.",
-        },
-        {
-          title: "Exam Engine",
-          icon: "📝",
-          desc: "Practice tests, revision plans, and real-time performance insights.",
-        },
-        {
-          title: "SMS Learning",
-          icon: "📱",
-          desc: "Access education without internet — simple SMS-based delivery.",
-        },
-        {
-          title: "Analytics",
-          icon: "📊",
-          desc: "Track progress, identify weaknesses, and celebrate growth.",
-        },
-        {
-          title: "Classroom AI",
-          icon: "🏫",
-          desc: "AI-powered insights for schools and teachers at scale.",
-        },
-    ];
 
     useEffect(() => {
         const navbar = document.getElementById("navbar");
@@ -56,16 +24,48 @@ export default function HomePage() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-      const toggleMobileMenu = () => {
-          const navLinks = document.getElementById("navLinks");
-          const loginBtn = document.getElementById("loginBtn");
-          navLinks?.classList.toggle("open");
-          loginBtn?.classList.toggle("show-mobile");
-      };
+    const toggleMobileMenu = () => {
+        const navLinks = document.getElementById("navLinks");
+        const loginBtn = document.getElementById("loginBtn");
+        navLinks?.classList.toggle("open");
+        loginBtn?.classList.toggle("show-mobile");
+    };
+
+    const features = [
+        {
+            title: "AI Tutor",
+            icon: "🧠",
+            desc: "Personalized explanations, doubt solving, and adaptive learning paths.",
+        },
+        {
+            title: "Focus Mode",
+            icon: "⚡",
+            desc: "Distraction-free study sessions with deep productivity analytics.",
+        },
+        {
+            title: "Exam Engine",
+            icon: "📝",
+            desc: "Practice tests, revision plans, and real-time performance insights.",
+        },
+        {
+            title: "SMS Learning",
+            icon: "📱",
+            desc: "Access education without internet — simple SMS-based delivery.",
+        },
+        {
+            title: "Analytics",
+            icon: "📊",
+            desc: "Track progress, identify weaknesses, and celebrate growth.",
+        },
+        {
+            title: "Classroom AI",
+            icon: "🏫",
+            desc: "AI-powered insights for schools and teachers at scale.",
+        },
+    ];
 
     return (
         <main className="landing">
-            <CursorComponent />
             <div className="ambient-orbs">
                 <div className="orb orb-purple" />
                 <div className="orb orb-green" />
@@ -74,12 +74,14 @@ export default function HomePage() {
 
             <nav className="navbar" id="navbar">
                 <div className="logo">
-                    <Image src="/logo.png" alt="AURA" width={120} height={40} />
+                    <Image src="/logo.png" alt="AURA" width={120} height={80} />
                 </div>
                 <div className="nav-links" id="navLinks">
                     <a href="#features" onClick={() => document.getElementById("navLinks")?.classList.remove("open")}>Features</a>
                     <a href="#difference" onClick={() => document.getElementById("navLinks")?.classList.remove("open")}>Difference</a>
                     <a href="#community" onClick={() => document.getElementById("navLinks")?.classList.remove("open")}>Community</a>
+                    <a href="/ai" onClick={() => document.getElementById("navLinks")?.classList.remove("open")}>AI</a>
+                    <a href="/timer" onClick={() => document.getElementById("navLinks")?.classList.remove("open")}>Timer</a>
                 </div>
                 <div className="nav-actions">
                     <button className="login-btn" id="loginBtn" onClick={() => router.push("/login")}>Login</button>
@@ -102,22 +104,22 @@ export default function HomePage() {
                     Learn faster. Focus longer. Reach students everywhere. Powered by AI. Built for impact.
                 </p>
                 <div className="hero-buttons">
-                  <button className="primary-btn primary-btn-lg" onClick={() => router.push("/signup")}>Get Your AURA</button>
-                  <button className="secondary-btn">Watch Demo</button>
+                    <button className="primary-btn primary-btn-lg" onClick={() => router.push("/signup")}>Get Your AURA</button>
+                    <button className="secondary-btn">Watch Demo</button>
                 </div>
                 <div className="hero-stats">
-                  <div className="stat-card">
-                    <h3>3M+</h3>
-                    <p>Training Examples</p>
-                  </div>
-                  <div className="stat-card">
-                    <h3>24/7</h3>
-                    <p>AI Learning</p>
-                  </div>
-                  <div className="stat-card">
-                    <h3>SMS</h3>
-                    <p>Offline Education</p>
-                  </div>
+                    <div className="stat-card">
+                        <h3>3M+</h3>
+                        <p>Training Examples</p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>24/7</h3>
+                        <p>AI Learning</p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>SMS</h3>
+                        <p>Offline Education</p>
+                    </div>
                 </div>
             </section>
 
@@ -131,8 +133,8 @@ export default function HomePage() {
                     {features.map((feature) => (
                         <div key={feature.title} className="feature-card">
                             <div className="feature-icon">{feature.icon}</div>
-                                <h3>{feature.title}</h3>
-                                <p>{feature.desc}</p>
+                            <h3>{feature.title}</h3>
+                            <p>{feature.desc}</p>
                             <div className="feature-hover-line" />
                         </div>
                     ))}
@@ -172,25 +174,50 @@ export default function HomePage() {
             </section>
 
             <section id="community" className="community-section">
-                  <span className="section-label">Our Mission</span>
-                  <h2 className="section-title">Built To Help Everyone Learn</h2>
-                  <p className="section-subtitle">
-                      Education shouldn't depend on privilege. We're building for everyone.
-                  </p>
-                  <div className="community-grid">
-                      <div className="impact-card">
-                          <h3>📚 SMS Education</h3>
-                          <p>Learning for students without smartphones or reliable internet access.</p>
-                      </div>
-                      <div className="impact-card">
-                          <h3>🌍 Social Impact</h3>
-                          <p>Expanding educational access to underserved communities worldwide.</p>
-                      </div>
-                      <div className="impact-card">
-                          <h3>🏫 School Partnerships</h3>
-                          <p>Future-ready infrastructure designed for national education systems.</p>
-                      </div>
-                  </div>
+                <span className="section-label">Our Mission</span>
+                <h2 className="section-title">Built To Help Everyone Learn</h2>
+                <p className="section-subtitle">
+                    Education shouldn't depend on privilege. We're building for everyone.
+                </p>
+                <div className="community-grid">
+                    <Link href="/community" className="impact-card">
+                        <h3>📚 SMS Education</h3>
+                        <p>Learning for students without smartphones or reliable internet access.</p>
+                    </Link>
+                    <Link href="/community" className="impact-card">
+                        <h3>🌍 Social Impact</h3>
+                        <p>Expanding educational access to underserved communities worldwide.</p>
+                    </Link>
+                    <Link href="/community" className="impact-card">
+                        <h3>🏫 School Partnerships</h3>
+                        <p>Future-ready infrastructure designed for national education systems.</p>
+                    </Link>
+                </div>
+            </section>
+
+            <section className="movement-section">
+                <span className="section-label">Join the Movement</span>
+                <h2 className="section-title">Be Part of Something Bigger</h2>
+                <div className="movement-content">
+                    <p className="movement-tagline">#AURA — Go Crazzzy.</p>
+                    <div className="movement-steps">
+                        <div className="movement-step">
+                            <span className="step-num">1</span>
+                            <span className="step-label">Start Free</span>
+                        </div>
+                        <div className="movement-step">
+                            <span className="step-num">2</span>
+                            <span className="step-label">Learn with AI</span>
+                        </div>
+                        <div className="movement-step">
+                            <span className="step-num">3</span>
+                            <span className="step-label">Impact the World</span>
+                        </div>
+                    </div>
+                    <button className="primary-btn primary-btn-lg" onClick={() => router.push("/signup")}>
+                        Join Now
+                    </button>
+                </div>
             </section>
 
             <section className="future-section">
@@ -204,13 +231,14 @@ export default function HomePage() {
 
             <section className="cta-section">
                 <div className="cta-glow" />
-                <h2>Ready To Get Your AURA?</h2>
+                <h2>Ready To Make It Real?</h2>
                 <p>Learn smarter. Grow faster. <strong>Go Crazzzy.</strong></p>
-                <button className="primary-btn primary-btn-lg">Start Free</button>
+                <button className="primary-btn primary-btn-lg" onClick={() => router.push("/signup")}>Start Free</button>
             </section>
 
             <div className="footer-mini">
-              © 2026 <span>AURA</span> — Adaptive Universal Resource for Achievement. All rights reserved.
+                © 2026 <span>AURA</span> — Adaptive Universal Resource for Achievement. All rights reserved.
+                <span className="sparkle"> ✦</span>
             </div>
         </main>
     );
