@@ -1,8 +1,8 @@
-html,
+html {
+}
 body {
-    overflow-x: hidden;
     overflow-y: auto;
-    margin: 0;
+    overflow-x: hidden;
 }
 
 .popupOverlay {
@@ -10,6 +10,7 @@ body {
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -20,7 +21,7 @@ body {
     background: #0b0b0b;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
-    padding: 2rem;
+    padding: 2.5rem;
     max-width: 400px;
     text-align: center;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
@@ -28,12 +29,32 @@ body {
 
 .popupContent h2 {
     margin-bottom: 1rem;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    color: #f97316;
 }
 
 .popupContent p {
     color: #a0a0a0;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.8rem;
+    line-height: 1.6;
+}
+
+.popupContent .primaryBtn {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    border-radius: 999px;
+    background: #10b981;
+    color: #000;
+    font-weight: 700;
+    border: none;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.popupContent .primaryBtn:hover {
+    background: #34d399;
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.5);
+    transform: scale(1.02);
 }
 
 .animatedGrid {
@@ -41,7 +62,7 @@ body {
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    height: auto;
+    overflow: hidden;
 }
 
 .gridInner {
@@ -76,6 +97,7 @@ body {
     inset: 0;
     pointer-events: none;
     z-index: 1;
+    overflow: hidden;
 }
 
 .particle {
@@ -83,6 +105,7 @@ body {
     border-radius: 50%;
     filter: blur(1px);
     opacity: 0.4;
+    overflow: hidden;
 }
 
 .page {
@@ -92,6 +115,7 @@ body {
     color: #fff;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 .hero {
@@ -101,6 +125,7 @@ body {
     min-height: 100vh;
     text-align: center;
     padding: 0 2rem;
+    overflow:hidden
 }
 
 .heroContent {
@@ -115,6 +140,7 @@ body {
     background: linear-gradient(135deg, #10b981, #f97316);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .heroSubtitle {
@@ -139,6 +165,9 @@ body {
     text-decoration: none;
     transition: all 0.3s ease;
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .primaryBtn:hover {
@@ -156,6 +185,9 @@ body {
     text-decoration: none;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .secondaryBtn:hover {
@@ -192,11 +224,13 @@ body {
     backdrop-filter: blur(16px);
     transition: all 0.3s ease;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
 .card h3 {
@@ -215,6 +249,7 @@ body {
     list-style: none;
     padding: 0;
     margin: 1.5rem 0;
+    flex: 1;
 }
 
 .card li {
@@ -233,6 +268,9 @@ body {
     text-decoration: none;
     font-weight: 600;
     transition: all 0.3s;
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .cardBtn:hover {
@@ -268,6 +306,10 @@ body {
     font-weight: 700;
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
     transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
 }
 
 .featuredBtn:hover {
@@ -436,6 +478,7 @@ body {
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s;
+    font-family: inherit;
 }
 
 .donateBtn:hover {
@@ -463,6 +506,7 @@ body {
     background: linear-gradient(135deg, #fff, #a0a0a0);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .finalCta {
@@ -504,5 +548,20 @@ body {
     }
     .cards {
         grid-template-columns: 1fr;
+    }
+    .barLabel {
+        width: 80px;
+        font-size: 0.8rem;
+    }
+    .timelineNode {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+    .nodeLabel {
+        font-size: 1rem;
+    }
+    .popupContent {
+        margin: 1rem;
+        padding: 1.5rem;
     }
 }

@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-        // Check if env vars are present
         if (!supabaseUrl || !supabaseServiceRoleKey) {
             console.error('Missing env vars:', { supabaseUrl: !!supabaseUrl, supabaseServiceRoleKey: !!supabaseServiceRoleKey });
             return NextResponse.json(

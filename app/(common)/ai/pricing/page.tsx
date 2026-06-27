@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, useScroll } from "framer-motion";
+import { motion } from "framer-motion";
 import styles from "../../../style/pricing.module.css";
 
 const AnimatedGrid = () => {
@@ -62,36 +62,26 @@ const useSpotlight = () => {
     }, []);
 };
 
-const useDonationPopup = () => {
+const useNotAvailablePopup = () => {
     const [showPopup, setShowPopup] = useState(false);
-
     const openPopup = () => setShowPopup(true);
     const closePopup = () => setShowPopup(false);
-
     return { showPopup, openPopup, closePopup };
 };
 
 export default function PricingPage() {
     useSpotlight();
-    const { showPopup, openPopup, closePopup } = useDonationPopup();
+    const { showPopup, openPopup, closePopup } = useNotAvailablePopup();
 
     const [requests, setRequests] = useState(1000);
     const [researchTasks, setResearchTasks] = useState(10);
     const estimatedCost = requests * 0.02 + researchTasks * 0.5;
 
-    const sectionRef = useRef(null);
-
     return (
         <div className={styles.page}>
-            <style jsx global>{`
-                html,
-                body {
-                    overflow-x: hidden;
-                }
-            `}</style>
-
             <AnimatedGrid />
             <Particles />
+
             <section className={styles.hero}>
                 <div className={styles.heroContent}>
                     <motion.h1
@@ -126,8 +116,7 @@ export default function PricingPage() {
                 </div>
             </section>
 
-            {/* Pricing cards */}
-            <section className={styles.pricing} ref={sectionRef}>
+            <section className={styles.pricing}>
                 <motion.h2
                     className={styles.sectionTitle}
                     initial={{ opacity: 0, y: 30 }}
@@ -139,7 +128,6 @@ export default function PricingPage() {
                 </motion.h2>
 
                 <div className={styles.cards}>
-                    {/* Community */}
                     <motion.div
                         className={`${styles.card} ${styles.community}`}
                         initial={{ opacity: 0, y: 40 }}
@@ -160,7 +148,6 @@ export default function PricingPage() {
                         </a>
                     </motion.div>
 
-                    {/* Builder (Featured) */}
                     <motion.div
                         className={`${styles.card} ${styles.featured}`}
                         initial={{ opacity: 0, y: 40 }}
@@ -178,12 +165,11 @@ export default function PricingPage() {
                             <li>No monthly subscription</li>
                             <li>Priority queue</li>
                         </ul>
-                        <a href="/ai" className={styles.featuredBtn}>
+                        <button onClick={openPopup} className={styles.featuredBtn}>
                             Start Building
-                        </a>
+                        </button>
                     </motion.div>
 
-                    {/* Enterprise */}
                     <motion.div
                         className={`${styles.card} ${styles.enterprise}`}
                         initial={{ opacity: 0, y: 40 }}
@@ -198,14 +184,13 @@ export default function PricingPage() {
                             <li>Fine tuning</li>
                             <li>Contact sales</li>
                         </ul>
-                        <a href="/ai" className={styles.cardBtn}>
+                        <button onClick={openPopup} className={styles.cardBtn}>
                             Contact Us
-                        </a>
+                        </button>
                     </motion.div>
                 </div>
             </section>
 
-            {/* Calculator */}
             <section className={styles.calculator}>
                 <motion.h2
                     className={styles.sectionTitle}
@@ -258,7 +243,6 @@ export default function PricingPage() {
                 </motion.div>
             </section>
 
-            {/* Cost Transparency */}
             <section className={styles.transparency}>
                 <motion.h2
                     className={styles.sectionTitle}
@@ -304,7 +288,6 @@ export default function PricingPage() {
                 </div>
             </section>
 
-            {/* Timeline */}
             <section className={styles.timeline}>
                 <motion.h2
                     className={styles.sectionTitle}
@@ -341,7 +324,6 @@ export default function PricingPage() {
                 </div>
             </section>
 
-            {/* Support AURA (with temporary donation popup) */}
             <section className={styles.support}>
                 <motion.h2
                     className={styles.sectionTitle}
@@ -371,7 +353,6 @@ export default function PricingPage() {
                 </p>
             </section>
 
-            {/* Trust Manifesto */}
             <section className={styles.trust}>
                 <motion.div
                     className={styles.trustStatement}
@@ -384,7 +365,6 @@ export default function PricingPage() {
                 </motion.div>
             </section>
 
-            {/* Final CTA */}
             <section className={styles.finalCta}>
                 <motion.div
                     className={styles.ctaGlow}
@@ -417,7 +397,6 @@ export default function PricingPage() {
                 </motion.div>
             </section>
 
-            {/* Donation Popup Modal */}
             {showPopup && (
                 <motion.div
                     className={styles.popupOverlay}
@@ -433,13 +412,13 @@ export default function PricingPage() {
                         exit={{ scale: 0.8, opacity: 0 }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h2>Thank you for your support! 💚</h2>
+                        <h2>🚧 Not Available Yet</h2>
                         <p>
-                            Donations are not available right now, but we really
-                            appreciate your continued support. Stay tuned!
+                            This feature is currently under development. We're working hard
+                            to bring it to you. Stay tuned for updates!
                         </p>
                         <button onClick={closePopup} className={styles.primaryBtn}>
-                            Close
+                            Got it
                         </button>
                     </motion.div>
                 </motion.div>
