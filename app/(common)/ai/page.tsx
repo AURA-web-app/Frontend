@@ -22,6 +22,7 @@ export default function AIChat() {
     const [isTyping, setIsTyping] = useState(false);
     const [advModelsOpen, setAdvModelsOpen] = useState(false);
     const [flawOpen, setFlawOpen] = useState(false);
+    const [selectedModel, setSelectedModel] = useState("Alpha");
     const chatBoxRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -48,7 +49,7 @@ export default function AIChat() {
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "ai",
-                content: generateAIResponse(trimmed),
+                content: generateAIResponse(trimmed, selectedModel),
             };
             setMessages((prev) => [...prev, aiMsg]);
             setIsTyping(false);
@@ -62,23 +63,28 @@ export default function AIChat() {
         }
     };
 
-    const generateAIResponse = (userInput: string): string => {
+    const generateAIResponse = (userInput: string, model: string): string => {
         const lower = userInput.toLowerCase();
+        let base = "";
         if (lower.includes("derivative")) {
-            return "The derivative of f(x) = x^n is f'(x) = n*x^(n-1). For example, if f(x) = x^2, then f'(x) = 2x.";
+            base = "The derivative of f(x) = x^n is f'(x) = n*x^(n-1). For example, if f(x) = x^2, then f'(x) = 2x.";
+        } else if (lower.includes("calculus")) {
+            base = "Calculus is the study of continuous change. The two main branches are differentiation and integration.";
+        } else if (lower.includes("hello") || lower.includes("hi")) {
+            base = "Hello! How can I assist with your studies today?";
+        } else {
+            base = "That's a great question! Could you provide a bit more detail so I can help you better?";
         }
-        if (lower.includes("calculus")) {
-            return "Calculus is the study of continuous change. The two main branches are differentiation and integration.";
-        }
-        if (lower.includes("hello") || lower.includes("hi")) {
-            return "Hello! How can I assist with your studies today?";
-        }
-        return "That's a great question! Could you provide a bit more detail so I can help you better?";
+        return `[${model}] ${base}`;
     };
 
     const closeAllPanels = () => {
         setAdvModelsOpen(false);
         setFlawOpen(false);
+    };
+
+    const selectModel = (model: string) => {
+        setSelectedModel(model);
     };
 
     return (
@@ -87,10 +93,25 @@ export default function AIChat() {
                 <button className="close-panel" onClick={() => setAdvModelsOpen(false)}>← Close</button>
                 <h2>ADV MODELS</h2>
                 <p>Advanced reasoning models with extended context.</p>
-                <ul>
-                    <li>Model Alpha – 128k context</li>
-                    <li>Model Beta – 256k context</li>
-                    <li>Model Gamma – 512k context</li>
+                <ul className="model-list">
+                    <li
+                        className={selectedModel === "Alpha" ? "active" : ""}
+                        onClick={() => selectModel("Alpha")}
+                    >
+                        Alpha – 128k context
+                    </li>
+                    <li
+                        className={selectedModel === "Beta" ? "active" : ""}
+                        onClick={() => selectModel("Beta")}
+                    >
+                        Beta – 256k context
+                    </li>
+                    <li
+                        className={selectedModel === "Gamma" ? "active" : ""}
+                        onClick={() => selectModel("Gamma")}
+                    >
+                        Gamma – 512k context
+                    </li>
                 </ul>
             </div>
 
@@ -98,15 +119,32 @@ export default function AIChat() {
                 <button className="close-panel" onClick={() => setFlawOpen(false)}>Close →</button>
                 <h2>FLAW</h2>
                 <p>Experimental research models. Expect errors.</p>
-                <ul>
-                    <li>Flaw 7k – 7,000 params</li>
-                    <li>Flaw 10k – 10,000 params</li>
-                    <li>Flaw 12k – 12,000 params</li>
+                <ul className="model-list">
+                    <li
+                        className={selectedModel === "Flaw 7k" ? "active" : ""}
+                        onClick={() => selectModel("Flaw 7k")}
+                    >
+                        Flaw 7k – 7,000 params
+                    </li>
+                    <li
+                        className={selectedModel === "Flaw 10k" ? "active" : ""}
+                        onClick={() => selectModel("Flaw 10k")}
+                    >
+                        Flaw 10k – 10,000 params
+                    </li>
+                    <li
+                        className={selectedModel === "Flaw 12k" ? "active" : ""}
+                        onClick={() => selectModel("Flaw 12k")}
+                    >
+                        Flaw 12k – 12,000 params
+                    </li>
                 </ul>
             </div>
+
             {(advModelsOpen || flawOpen) && (
                 <div className="panel-overlay" onClick={closeAllPanels} />
             )}
+
             <div className="ai-chat-header">
                 <div className="header-top-row">
                     <h1>AI Study Assistant</h1>
@@ -121,7 +159,11 @@ export default function AIChat() {
                     </div>
                 </div>
                 <p>Ask anything about your subjects, exams, or study plans</p>
+                <div className="active-model-indicator">
+                    Active model: <span>{selectedModel}</span>
+                </div>
             </div>
+
             <div className="ai-chat-box" ref={chatBoxRef}>
                 {messages.map((msg) => (
                     <div
@@ -141,6 +183,7 @@ export default function AIChat() {
                     </div>
                 )}
             </div>
+
             <div className="ai-chat-input">
                 <input
                     type="text"

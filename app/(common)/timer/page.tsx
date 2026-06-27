@@ -2,20 +2,36 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "../../style/timer.css";
+import "../../style/theme.css";
 
 const TOTAL_DAY_SECONDS = 86400;
-const CIRCLE_RADIUS_RATIO = 0.78;
-const STROKE_WIDTH_RATIO = 0.09;
-
+const CIRCLE_RADIUS_RATIO = 0.85;
+const STROKE_WIDTH_RATIO = 0.03;
 interface Session {
     start: number;
     end: number | null;
 }
-
 interface LeaderboardEntry {
     name: string;
     totalToday: number;
 }
+const getBrowserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const formatTimeInTimezone = (date: Date, timezone: string) => {
+    return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZone: timezone,
+    });
+};
+const formatDateInTimezone = (date: Date, timezone: string) => {
+    return date.toLocaleDateString([], {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        timeZone: timezone,
+    });
+};
 
 export default function Timer() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -27,17 +43,24 @@ export default function Timer() {
     const [username, setUsername] = useState<string>("");
     const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
     const [liveTime, setLiveTime] = useState(new Date());
-    const animFrameRef = useRef<number>(0);
     const [isMobile, setIsMobile] = useState(false);
-
+    const [timezone, setTimezone] = useState<string>(getBrowserTimezone());
+    const [showTimezoneModal, setShowTimezoneModal] = useState(false);
+    const animFrameRef = useRef<number>(0);
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);
         checkMobile();
         window.addEventListener("resize", checkMobile);
         return () => window.removeEventListener("resize", checkMobile);
     }, []);
-
     useEffect(() => {
+        const storedTz = localStorage.getItem("aura-timezone");
+        if (storedTz) {
+            setTimezone(storedTz);
+        } else {
+            setTimezone(getBrowserTimezone());
+            setShowTimezoneModal(true);
+        }
         const storedSessions = localStorage.getItem("aura-study-sessions");
         if (storedSessions) {
             const parsed: Session[] = JSON.parse(storedSessions);
@@ -45,7 +68,6 @@ export default function Timer() {
             setSessions(parsed);
             if (ongoing) setCurrentSessionStart(ongoing.start);
         }
-
         const storedGuestId = localStorage.getItem("aura-guest-id");
         if (storedGuestId) {
             setGuestId(storedGuestId);
@@ -56,7 +78,6 @@ export default function Timer() {
             localStorage.setItem("aura-guest-id", newId);
             setGuestId(newId);
         }
-
         const storedUsername = localStorage.getItem("aura-username");
         if (storedUsername) setUsername(storedUsername);
     }, []);
@@ -64,12 +85,10 @@ export default function Timer() {
     useEffect(() => {
         localStorage.setItem("aura-study-sessions", JSON.stringify(sessions));
     }, [sessions]);
-
     useEffect(() => {
         const timer = setInterval(() => setLiveTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
-
     useEffect(() => {
         const todayMidnight = new Date();
         todayMidnight.setHours(0, 0, 0, 0);
@@ -120,7 +139,6 @@ export default function Timer() {
         animFrameRef.current = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animFrameRef.current);
     }, [animate]);
-
     const drawCanvas = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -146,7 +164,6 @@ export default function Timer() {
         ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
         ctx.lineWidth = lineWidth;
         ctx.stroke();
-
         const now = new Date();
         const midnight = new Date(now);
         midnight.setHours(0, 0, 0, 0);
@@ -161,7 +178,6 @@ export default function Timer() {
         ctx.lineWidth = lineWidth;
         ctx.lineCap = "round";
         ctx.stroke();
-
         const timestampToAngle = (ts: number) => {
             const d = new Date(ts);
             const secs = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds() + d.getMilliseconds() / 1000;
@@ -186,7 +202,6 @@ export default function Timer() {
             ctx.lineCap = "butt";
             ctx.stroke();
         }
-
         const dotX = centerX + radius * Math.cos(currentAngle);
         const dotY = centerY + radius * Math.sin(currentAngle);
         ctx.beginPath();
@@ -198,7 +213,6 @@ export default function Timer() {
         ctx.shadowColor = "transparent";
         ctx.shadowBlur = 0;
     };
-
     const toggleSession = () => {
         if (currentSessionStart === null) {
             const start = Date.now();
@@ -222,14 +236,12 @@ export default function Timer() {
         const s = Math.floor(seconds % 60);
         return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     };
-
     const completedSessions = sessions
         .filter((s) => s.end !== null)
         .sort((a, b) => b.start - a.start)
         .slice(0, 5);
 
     const isRunning = currentSessionStart !== null;
-
     const touchStartX = useRef(0);
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
@@ -239,6 +251,12 @@ export default function Timer() {
         if (Math.abs(deltaX) > 60 && deltaX > 0) {
             setLeaderboardOpen(true);
         }
+    };
+
+    const handleTimezoneConfirm = (tz: string) => {
+        setTimezone(tz);
+        localStorage.setItem("aura-timezone", tz);
+        setShowTimezoneModal(false);
     };
 
     const leaderboardContent = (
@@ -267,12 +285,36 @@ export default function Timer() {
 
     return (
         <div className="timer-wrapper">
+            {showTimezoneModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <h2>Select your timezone</h2>
+                        <p>We'll use this to show your local time.</p>
+                        <select
+                            value={timezone}
+                            onChange={(e) => setTimezone(e.target.value)}
+                            className="timezone-select"
+                        >
+                            {Intl.supportedValuesOf("timeZone").map((tz) => (
+                                <option key={tz} value={tz}>
+                                    {tz}
+                                </option>
+                            ))}
+                        </select>
+                        <button
+                            className="primary-btn"
+                            onClick={() => handleTimezoneConfirm(timezone)}
+                        >
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+            )}
             {!isMobile && (
                 <div className="leaderboard-sidebar">
                     {leaderboardContent}
                 </div>
             )}
-
             {isMobile && (
                 <>
                     <div className={`leaderboard-panel ${leaderboardOpen ? "open" : ""}`}>
@@ -292,7 +334,6 @@ export default function Timer() {
                     </button>
                 </>
             )}
-
             <div
                 className="timer-container"
                 onTouchStart={isMobile ? handleTouchStart : undefined}
@@ -300,15 +341,29 @@ export default function Timer() {
             >
                 <div className="circle-wrapper">
                     <canvas ref={canvasRef} className="timer-canvas" />
+
                     <div className="circle-center">
                         <span className="live-clock">
-                            {liveTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                            {formatTimeInTimezone(liveTime, timezone)}
                         </span>
                         <span className="live-date">
-                            {liveTime.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}
+                            {formatDateInTimezone(liveTime, timezone)}
                         </span>
-                        <span className="guest-id">{username || guestId}</span>
+                        <div className="user-info">
+                            <input
+                                type="text"
+                                className="username-input"
+                                placeholder="Your name (optional)"
+                                value={username}
+                                onChange={(e) => {
+                                    setUsername(e.target.value);
+                                    localStorage.setItem("aura-username", e.target.value);
+                                }}
+                            />
+                            <span className="guest-id">{username ? "" : guestId}</span>
+                        </div>
                     </div>
+
                     <button
                         className={`session-btn ${isRunning ? "stop" : ""}`}
                         onClick={toggleSession}
