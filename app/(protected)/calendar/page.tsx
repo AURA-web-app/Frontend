@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import "../../style/calendar.css";
-import CustomCursor from "@/app/cursor";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -92,7 +91,6 @@ export default function CalendarPage() {
 
     return (
         <div className="calendar-page">
-            <CustomCursor />
             <div className="calendar-layout">
                 <div className="calendar-card">
                     <div className="calendar-header">
