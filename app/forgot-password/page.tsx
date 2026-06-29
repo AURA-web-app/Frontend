@@ -58,10 +58,8 @@ export default function ForgotPasswordPage() {
             const exists = await checkEmailExists(email);
             if (!exists) {
                 setError(
-                    <>
-                        No account found with this email.{' '}
-                        <a href="/signup" style={{ color: '#10b981', fontWeight: 'bold' }}>Sign up instead</a>
-                    </>
+                    "No account found with this email." + ' '
+                    + <a href="/signup" style={{ color: '#10b981', fontWeight: 'bold' }}>Sign up instead</a>
                 );
                 setLoading(false);
                 return;

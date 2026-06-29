@@ -63,10 +63,8 @@ export default function SignupPage() {
             const exists = await checkEmailExists(email);
             if (exists) {
                 setError(
-                    <>
-                        Account Exists with this email{' '}
-                        <a href="/login" style={{ color: '#10b981', fontWeight: 'bold' }}>Login instead</a>
-                    </>
+                    "Account Exists with this email" + ' '
+                    + <a href="/login" style={{ color: '#10b981', fontWeight: 'bold' }}>Login instead</a>
                 );
                 setLoading(false);
                 return;
