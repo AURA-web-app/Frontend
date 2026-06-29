@@ -24,9 +24,6 @@ export default function AdminLogin() {
                 password,
             });
             if (signInError) throw new Error(signInError.message);
-
-            // Optionally check admin role from user metadata or a profiles table
-            // For now, redirect to admin dashboard
             router.push("/admin");
         } catch (err: any) {
             setError(err.message);

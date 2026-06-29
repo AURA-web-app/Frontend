@@ -8,47 +8,6 @@ export default function NotFound() {
     const [supportHover, setSupportHover] = useState(false);
 
     const styles = {
-        container: {
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "100vh",
-            padding: "2rem",
-            textAlign: "center",
-            background: "#010101",
-            color: "#fafafa",
-            fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-            position: "relative",
-            overflow: "hidden",
-            backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-        },
-        orbPurple: {
-            position: "absolute",
-            width: "500px",
-            height: "500px",
-            borderRadius: "50%",
-            filter: "blur(150px)",
-            opacity: 0.06,
-            background: "#8b5cf6",
-            top: "-10%",
-            left: "-10%",
-            pointerEvents: "none",
-        },
-        orbGreen: {
-            position: "absolute",
-            width: "400px",
-            height: "400px",
-            borderRadius: "50%",
-            filter: "blur(150px)",
-            opacity: 0.05,
-            background: "#10b981",
-            bottom: "-10%",
-            right: "-10%",
-            pointerEvents: "none",
-        },
         logoWrapper: {
             width: "160px",
             height: "160px",
@@ -60,9 +19,7 @@ export default function NotFound() {
             animation: "float 4s ease-in-out infinite",
         },
         logo: {
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
+            
         },
         title: {
             fontSize: "clamp(4rem, 10vw, 8rem)",
@@ -86,12 +43,6 @@ export default function NotFound() {
             color: "#5e5e5e",
             marginBottom: "2.5rem",
             maxWidth: "400px",
-        },
-        buttonGroup: {
-            display: "flex",
-            gap: "1rem",
-            flexWrap: "wrap",
-            justifyContent: "center",
         },
         primaryButton: (hover: boolean) => ({
             padding: "0.85rem 2rem",
@@ -134,25 +85,20 @@ export default function NotFound() {
 
     return (
         <>
-            <div style={styles.container}>
-                <div style={styles.orbPurple} />
-                <div style={styles.orbGreen} />
-
+            <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "2rem", textAlign: "center", background: "#010101", color: "#fafafa", fontFamily: "'Inter', system-ui, -apple-system, sans-serif", position: "relative", overflow: "hidden", backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)", backgroundSize: "48px 48px"}}>
+                <div style={{position: "absolute", width: "500px", height: "500px", borderRadius: "50%", filter: "blur(150px)", opacity: 0.06, background: "#8b5cf6", top: "-10%", left: "-10%", pointerEvents: "none"}}></div>
+                <div style={{position: "absolute", width: "400px", height: "400px", borderRadius: "50%", filter: "blur(150px)", opacity: 0.05, background: "#10b981", bottom: "-10%", right: "-10%", pointerEvents: "none"}}></div>
                 <div style={styles.logoWrapper}>
-                    <img src="./logo.png" alt="AURA Logo" style={styles.logo} />
+                    <img src="./logo.png" alt="AURA Logo" style={{width: "100%", height: "100%", objectFit: "cover"}} />
                 </div>
-
                 <h1 style={styles.title}>404</h1>
-
                 <p style={styles.subtitle}>
                     Oops! The page you're looking for doesn't exist.
                 </p>
-
                 <p style={styles.description}>
                     It might have been moved or deleted. Let's get you back on track.
                 </p>
-
-                <div style={styles.buttonGroup}>
+                <div style={{display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center"}}>
                     <Link
                         href="/"
                         style={styles.primaryButton(homeHover)}
