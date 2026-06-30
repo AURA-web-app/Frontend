@@ -55,6 +55,7 @@ export default function Nav() {
             <Link href="/#features" onClick={closeMenu}>Features</Link>
             <Link href="/#pricing" onClick={closeMenu}>Pricing</Link>
             <Link href="/ai" onClick={closeMenu}>AI</Link>
+            <Link href="/timer" onClick={closeMenu}>Timer</Link>
             <Link href="/login" className={styles.loginBtn} onClick={closeMenu}>Login</Link>
             <Link href="/signup" className={styles.signupBtn} onClick={closeMenu}>Sign Up</Link>
         </>

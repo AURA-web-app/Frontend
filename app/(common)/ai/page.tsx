@@ -1,14 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { supabase } from "../../../lib/supabase/createclient";
+import { Message, AIModel } from "@/types/ai";
 import "../../style/ai.css";
 import "../../style/theme.css";
-
-interface Message {
-    id: string;
-    role: "user" | "ai";
-    content: string;
-}
 
 export default function AIChat() {
     const [messages, setMessages] = useState<Message[]>([
@@ -20,10 +16,53 @@ export default function AIChat() {
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
-    const [advModelsOpen, setAdvModelsOpen] = useState(false);
-    const [flawOpen, setFlawOpen] = useState(false);
-    const [selectedModel, setSelectedModel] = useState("Alpha");
+    const [selectedModel, setSelectedModel] = useState<AIModel>("flaw");
+    const [remaining, setRemaining] = useState<number | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
     const chatBoxRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const getSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setIsAuthenticated(true);
+                setAccessToken(session.access_token);
+            } else {
+                setIsAuthenticated(false);
+                setAccessToken(null);
+            }
+            fetchUsage(session?.access_token);
+        };
+        getSession();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                setIsAuthenticated(true);
+                setAccessToken(session.access_token);
+            } else {
+                setIsAuthenticated(false);
+                setAccessToken(null);
+            }
+            fetchUsage(session?.access_token);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const fetchUsage = async (token?: string) => {
+        const headers: HeadersInit = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        try {
+            const res = await fetch('/api/ai/usage', { headers });
+            if (res.ok) {
+                const data = await res.json();
+                setRemaining(data.remaining);
+            }
+        } catch (e) {
+        }
+    };
 
     useEffect(() => {
         if (chatBoxRef.current) {
@@ -44,16 +83,44 @@ export default function AIChat() {
         setMessages((prev) => [...prev, userMsg]);
         setInput("");
         setIsTyping(true);
+        setError(null);
 
-        setTimeout(() => {
+        try {
+            const headers: HeadersInit = {
+                'Content-Type': 'application/json',
+            };
+            if (accessToken) {
+                headers.Authorization = `Bearer ${accessToken}`;
+            }
+            const res = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    messages: [...messages, userMsg],
+                    model: selectedModel,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || 'Something went wrong.');
+                setIsTyping(false);
+                return;
+            }
+
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "ai",
-                content: generateAIResponse(trimmed, selectedModel),
+                content: data.response,
             };
             setMessages((prev) => [...prev, aiMsg]);
+            if (data.remaining !== undefined) setRemaining(data.remaining);
+        } catch (err) {
+            setError('Network error. Please try again.');
+        } finally {
             setIsTyping(false);
-        }, 1200);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -63,105 +130,49 @@ export default function AIChat() {
         }
     };
 
-    const generateAIResponse = (userInput: string, model: string): string => {
-        const lower = userInput.toLowerCase();
-        let base = "";
-        if (lower.includes("derivative")) {
-            base = "The derivative of f(x) = x^n is f'(x) = n*x^(n-1). For example, if f(x) = x^2, then f'(x) = 2x.";
-        } else if (lower.includes("calculus")) {
-            base = "Calculus is the study of continuous change. The two main branches are differentiation and integration.";
-        } else if (lower.includes("hello") || lower.includes("hi")) {
-            base = "Hello! How can I assist with your studies today?";
-        } else {
-            base = "That's a great question! Could you provide a bit more detail so I can help you better?";
-        }
-        return `[${model}] ${base}`;
-    };
+    const modelOptions: { value: AIModel; label: string }[] = [
+        { value: 'flaw', label: 'FLAW (unlimited, free)' },
+    ];
+    if (isAuthenticated) {
+        modelOptions.push(
+            { value: 'openrouter', label: 'OpenRouter (Gemini 2 Flash)' },
+            { value: 'github', label: 'GitHub (GPT-4o-mini)' },
+            { value: 'groq', label: 'Groq (Mixtral 8x7b)' }
+        );
+    }
 
-    const closeAllPanels = () => {
-        setAdvModelsOpen(false);
-        setFlawOpen(false);
-    };
-
-    const selectModel = (model: string) => {
-        setSelectedModel(model);
-    };
+    const canSend = input.trim().length > 0 && !isTyping;
 
     return (
         <div className="ai-chat-container">
-            <div className={`side-panel left-panel ${advModelsOpen ? "open" : ""}`}>
-                <button className="close-panel" onClick={() => setAdvModelsOpen(false)}>← Close</button>
-                <h2>ADV MODELS</h2>
-                <p>Advanced reasoning models with extended context.</p>
-                <ul className="model-list">
-                    <li
-                        className={selectedModel === "Alpha" ? "active" : ""}
-                        onClick={() => selectModel("Alpha")}
-                    >
-                        Alpha – 128k context
-                    </li>
-                    <li
-                        className={selectedModel === "Beta" ? "active" : ""}
-                        onClick={() => selectModel("Beta")}
-                    >
-                        Beta – 256k context
-                    </li>
-                    <li
-                        className={selectedModel === "Gamma" ? "active" : ""}
-                        onClick={() => selectModel("Gamma")}
-                    >
-                        Gamma – 512k context
-                    </li>
-                </ul>
-            </div>
-
-            <div className={`side-panel right-panel ${flawOpen ? "open" : ""}`}>
-                <button className="close-panel" onClick={() => setFlawOpen(false)}>Close →</button>
-                <h2>FLAW</h2>
-                <p>Experimental research models. Expect errors.</p>
-                <ul className="model-list">
-                    <li
-                        className={selectedModel === "Flaw 7k" ? "active" : ""}
-                        onClick={() => selectModel("Flaw 7k")}
-                    >
-                        Flaw 7k – 7,000 params
-                    </li>
-                    <li
-                        className={selectedModel === "Flaw 10k" ? "active" : ""}
-                        onClick={() => selectModel("Flaw 10k")}
-                    >
-                        Flaw 10k – 10,000 params
-                    </li>
-                    <li
-                        className={selectedModel === "Flaw 12k" ? "active" : ""}
-                        onClick={() => selectModel("Flaw 12k")}
-                    >
-                        Flaw 12k – 12,000 params
-                    </li>
-                </ul>
-            </div>
-
-            {(advModelsOpen || flawOpen) && (
-                <div className="panel-overlay" onClick={closeAllPanels} />
-            )}
-
             <div className="ai-chat-header">
                 <div className="header-top-row">
                     <h1>AI Study Assistant</h1>
                     <div className="header-actions">
-                        <button className="panel-toggle-btn" onClick={() => setAdvModelsOpen(!advModelsOpen)}>
-                            ADV MODELS
-                        </button>
-                        <button className="panel-toggle-btn" onClick={() => setFlawOpen(!flawOpen)}>
-                            FLAW
-                        </button>
+                        <select
+                            className="model-selector"
+                            value={selectedModel}
+                            onChange={(e) => setSelectedModel(e.target.value as AIModel)}
+                        >
+                            {modelOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </select>
+                        <span className="remaining-badge">
+                            {remaining !== null ? `${remaining} remaining` : '...'}
+                        </span>
                         <a href="/ai/pricing" className="pricing-btn">Pricing</a>
                     </div>
                 </div>
                 <p>Ask anything about your subjects, exams, or study plans</p>
-                <div className="active-model-indicator">
-                    Active model: <span>{selectedModel}</span>
-                </div>
+                {!isAuthenticated && (
+                    <p className="guest-note">🔓 Guest mode – 2 messages per day (FLAW only). <a href="/login">Log in</a> for more.</p>
+                )}
+                {isAuthenticated && (
+                    <p className="user-note">✅ Logged in – {remaining !== null ? remaining : '...'} advanced messages left today.</p>
+                )}
             </div>
 
             <div className="ai-chat-box" ref={chatBoxRef}>
@@ -182,6 +193,7 @@ export default function AIChat() {
                         <span></span>
                     </div>
                 )}
+                {error && <div className="error-message">{error}</div>}
             </div>
 
             <div className="ai-chat-input">
@@ -191,8 +203,9 @@ export default function AIChat() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
+                    disabled={isTyping}
                 />
-                <button onClick={handleSend} disabled={!input.trim()}>
+                <button onClick={handleSend} disabled={!canSend}>
                     Send
                 </button>
             </div>
