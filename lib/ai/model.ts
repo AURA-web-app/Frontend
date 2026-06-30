@@ -1,4 +1,4 @@
-import { Message } from "@/types/ai";
+import { Message } from "../../types/ai";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER;
 const GITHUB_TOKEN = process.env.GITHUB;
