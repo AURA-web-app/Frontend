@@ -20,6 +20,11 @@ function getClientIP(req: NextRequest): string {
     return forwarded?.split(',')[0] || cfConnecting || realIp || '0.0.0.0';
 }
 
+console.log('🔑 OPENROUTER:', process.env.OPENROUTER ? '✅' : '❌');
+console.log('🔑 GITHUB:', process.env.GITHUB ? '✅' : '❌');
+console.log('🔑 GROQ:', process.env.GROQ ? '✅' : '❌');
+console.log('🔑 FLAW:', process.env.FLAW ? '✅' : '❌');
+
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
