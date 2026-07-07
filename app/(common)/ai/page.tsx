@@ -55,7 +55,7 @@ export default function AIChat() {
         const headers: HeadersInit = {};
         if (token) headers.Authorization = `Bearer ${token}`;
         try {
-            const res = await fetch('/api/ai/usage', { headers });
+            const res = await fetch("/api/ai/usage", { headers });
             if (res.ok) {
                 const data = await res.json();
                 setRemaining(data.remaining);
@@ -87,13 +87,13 @@ export default function AIChat() {
 
         try {
             const headers: HeadersInit = {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             };
             if (accessToken) {
                 headers.Authorization = `Bearer ${accessToken}`;
             }
-            const res = await fetch('/api/ai/chat', {
-                method: 'POST',
+            const res = await fetch("/api/ai/chat", {
+                method: "POST",
                 headers,
                 body: JSON.stringify({
                     messages: [...messages, userMsg],
@@ -104,7 +104,7 @@ export default function AIChat() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || 'Something went wrong.');
+                setError(data.error || "Something went wrong.");
                 setIsTyping(false);
                 return;
             }
@@ -117,7 +117,7 @@ export default function AIChat() {
             setMessages((prev) => [...prev, aiMsg]);
             if (data.remaining !== undefined) setRemaining(data.remaining);
         } catch (err) {
-            setError('Network error. Please try again.');
+            setError("Network error. Please try again.");
         } finally {
             setIsTyping(false);
         }
@@ -131,13 +131,13 @@ export default function AIChat() {
     };
 
     const modelOptions: { value: AIModel; label: string }[] = [
-        { value: 'flaw', label: 'FLAW (unlimited, free)' },
+        { value: "flaw", label: "FLAW (unlimited, free)" },
     ];
     if (isAuthenticated) {
         modelOptions.push(
-            { value: 'openrouter', label: 'OpenRouter (Gemini 2 Flash)' },
-            { value: 'github', label: 'GitHub (GPT-4o-mini)' },
-            { value: 'groq', label: 'Groq (Mixtral 8x7b)' }
+            { value: "openrouter", label: "OpenRouter (Gemini 2 Flash)" },
+            { value: "github", label: "GitHub (GPT-4o-mini)" },
+            { value: "groq", label: "Groq (Mixtral 8x7b)" }
         );
     }
 
@@ -161,7 +161,7 @@ export default function AIChat() {
                             ))}
                         </select>
                         <span className="remaining-badge">
-                            {remaining !== null ? `${remaining} remaining` : '...'}
+                            {remaining !== null ? `${remaining} remaining` : "..."}
                         </span>
                         <a href="/ai/pricing" className="pricing-btn">Pricing</a>
                     </div>
@@ -171,7 +171,7 @@ export default function AIChat() {
                     <p className="guest-note">🔓 Guest mode – 2 messages per day (FLAW only). <a href="/login">Log in</a> for more.</p>
                 )}
                 {isAuthenticated && (
-                    <p className="user-note">✅ Logged in – {remaining !== null ? remaining : '...'} advanced messages left today.</p>
+                    <p className="user-note">✅ Logged in – {remaining !== null ? remaining : "..."} advanced messages left today.</p>
                 )}
             </div>
 

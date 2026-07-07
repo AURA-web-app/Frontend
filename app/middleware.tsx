@@ -49,24 +49,24 @@ export async function middleware(req: NextRequest) {
         return res;
     }
 
-    let role = 'user';
+    let role = "user";
     try {
         const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
+            .from("profiles")
+            .select("role")
+            .eq("id", session.user.id)
             .single();
 
         if (profile) {
-            role = profile.role || 'user';
+            role = profile.role || "user";
         }
     } catch (e) {
-        console.error('Error fetching profile:', e);
+        console.error("Error fetching profile:", e);
     }
-    if (pathname.startsWith("/admin") && role !== 'admin') {
+    if (pathname.startsWith("/admin") && role !== "admin") {
         return NextResponse.redirect(new URL("/dashboard", req.url));
     }
-    if (pathname.startsWith("/creator") && !['creator', 'admin'].includes(role)) {
+    if (pathname.startsWith("/creator") && !["creator", "admin"].includes(role)) {
         return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 

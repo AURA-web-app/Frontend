@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(request: NextRequest) {
     try {
@@ -7,9 +7,9 @@ export async function POST(request: NextRequest) {
         const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
         if (!supabaseUrl || !supabaseServiceRoleKey) {
-            console.error('Missing env vars:', { supabaseUrl: !!supabaseUrl, supabaseServiceRoleKey: !!supabaseServiceRoleKey });
+            console.error("Missing env vars:", { supabaseUrl: !!supabaseUrl, supabaseServiceRoleKey: !!supabaseServiceRoleKey });
             return NextResponse.json(
-                { error: 'Server configuration error. Missing credentials.' },
+                { error: "Server configuration error. Missing credentials." },
                 { status: 500 }
             );
         }
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { email } = body;
         if (!email) {
-            return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
+            return NextResponse.json({ error: "Email is required." }, { status: 400 });
         }
 
         // Create admin client inside the function to avoid issues at module level
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
         const { data, error } = await supabaseAdmin.auth.admin.listUsers();
         if (error) {
-            console.error('Supabase listUsers error:', error);
+            console.error("Supabase listUsers error:", error);
             return NextResponse.json(
                 { error: `Supabase error: ${error.message}` },
                 { status: 500 }
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ exists });
     } catch (error) {
-        console.error('Check email API error:', error);
+        console.error("Check email API error:", error);
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Internal server error.' },
+            { error: error instanceof Error ? error.message : "Internal server error." },
             { status: 500 }
         );
     }

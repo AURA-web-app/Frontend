@@ -8,20 +8,119 @@ import styles from "../../style/dashboard.module.css";
 
 export default function Dashboard() {
     const router = useRouter();
-    const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [userData, setUserData] = useState({
+        name: "",
+        email: "",
+        roll: "",
+        country: "",
+        totalStudyHours: 0,
+        coursesEnrolled: 0,
+        examsTaken: 0,
+        recentSessions: [] as { date: string; duration: string }[],
+        upcomingExams: [] as { name: string; date: string }[],
+    });
 
     useEffect(() => {
-        const getUser = async () => {
+        const fetchData = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 router.push("/login");
                 return;
             }
-            setUser(session.user);
+            const userId = session.user.id;
+
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("full_name, roll, country")
+                .eq("id", userId)
+                .maybeSingle();
+
+            if (profileError && profileError.code !== "PGRST116") {
+                console.error("Profile fetch error:", profileError);
+            }
+
+            const { data: sessions, error: sessionsError } = await supabase
+                .from("study_sessions")
+                .select("start_time, duration_seconds")
+                .eq("user_id", userId)
+                .order("start_time", { ascending: false })
+                .limit(5);
+
+            if (sessionsError && sessionsError.code !== "PGRST116") {
+                console.error("Sessions error:", sessionsError);
+            }
+
+            const { data: allSessions, error: totalError } = await supabase
+                .from("study_sessions")
+                .select("duration_seconds")
+                .eq("user_id", userId);
+
+            let totalHours = 0;
+            if (!totalError && allSessions) {
+                totalHours = allSessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0) / 3600;
+            } else if (totalError && totalError.code !== "PGRST116") {
+                console.error("Total sessions error:", totalError);
+            }
+
+            const { count: enrolledCount, error: enrollError } = await supabase
+                .from("enrollments")
+                .select("*", { count: "exact", head: true })
+                .eq("user_id", userId);
+
+            if (enrollError && enrollError.code !== "PGRST116") {
+                console.error("Enroll error:", enrollError);
+            }
+
+            const { count: examsCount, error: examError } = await supabase
+                .from("exam_attempts")
+                .select("*", { count: "exact", head: true })
+                .eq("user_id", userId);
+
+            if (examError && examError.code !== "PGRST116") {
+                console.error("Exam attempts error:", examError);
+            }
+
+            const now = new Date().toISOString();
+            const { data: upcoming, error: upcomingError } = await supabase
+                .from("calendar_events")
+                .select("title, start_time")
+                .eq("user_id", userId)
+                .eq("event_type", "exam")
+                .gte("start_time", now)
+                .order("start_time", { ascending: true })
+                .limit(5);
+
+            if (upcomingError && upcomingError.code !== "PGRST116") {
+                console.error("Upcoming exams error:", upcomingError);
+            }
+
+            const recent = (sessions || []).map(s => ({
+                date: new Date(s.start_time).toLocaleDateString(),
+                duration: s.duration_seconds
+                    ? `${Math.floor(s.duration_seconds / 3600)}h ${Math.floor((s.duration_seconds % 3600) / 60)}m`
+                    : "N/A",
+            }));
+
+            setUserData({
+                name: profile?.full_name || session.user.user_metadata?.full_name || "AURA Student",
+                email: session.user.email || "student@aura.edu",
+                roll: profile?.roll || "IN-000000",
+                country: profile?.country || "IN",
+                totalStudyHours: Math.round(totalHours),
+                coursesEnrolled: enrolledCount || 0,
+                examsTaken: examsCount || 0,
+                recentSessions: recent,
+                upcomingExams: (upcoming || []).map(e => ({
+                    name: e.title,
+                    date: new Date(e.start_time).toLocaleDateString(),
+                })),
+            });
+
             setLoading(false);
         };
-        getUser();
+
+        fetchData();
     }, [router]);
 
     if (loading) {
@@ -32,24 +131,6 @@ export default function Dashboard() {
             </div>
         );
     }
-    const userData = {
-        name: user?.user_metadata?.full_name || "AURA Student",
-        email: user?.email || "student@aura.edu",
-        roll: "IN-000042",
-        country: "IN",
-        totalStudyHours: 127,
-        coursesEnrolled: 4,
-        examsTaken: 12,
-        recentSessions: [
-            { date: "2026-06-27", duration: "2h 15m" },
-            { date: "2026-06-26", duration: "1h 45m" },
-            { date: "2026-06-25", duration: "3h 10m" },
-        ],
-        upcomingExams: [
-            { name: "Calculus Final", date: "2026-07-05" },
-            { name: "Physics Midterm", date: "2026-07-12" },
-        ],
-    };
 
     const quickLinks = [
         { href: "/ai", label: "AI Assistant", icon: "🤖", color: "#10b981" },
@@ -75,6 +156,7 @@ export default function Dashboard() {
                     </div>
                     <Link href="/" className={styles.homeLink}>← Home</Link>
                 </header>
+
                 <div className={styles.statsGrid}>
                     <div className={styles.statCard}>
                         <span className={styles.statIcon}>📖</span>
@@ -92,6 +174,7 @@ export default function Dashboard() {
                         <div className={styles.statLabel}>Exams Taken</div>
                     </div>
                 </div>
+
                 <div className={styles.quickActions}>
                     <h2>Quick Actions</h2>
                     <div className={styles.quickGrid}>
@@ -110,30 +193,40 @@ export default function Dashboard() {
                         ))}
                     </div>
                 </div>
+
                 <div className={styles.twoCol}>
                     <div className={styles.card}>
                         <h3>Recent Sessions</h3>
                         <ul className={styles.activityList}>
-                            {userData.recentSessions.map((s, i) => (
-                                <li key={i}>
-                                    <span>{s.date}</span>
-                                    <span className={styles.duration}>{s.duration}</span>
-                                </li>
-                            ))}
+                            {userData.recentSessions.length === 0 ? (
+                                <li>No sessions yet. Start studying!</li>
+                            ) : (
+                                userData.recentSessions.map((s, i) => (
+                                    <li key={i}>
+                                        <span>{s.date}</span>
+                                        <span className={styles.duration}>{s.duration}</span>
+                                    </li>
+                                ))
+                            )}
                         </ul>
                     </div>
                     <div className={styles.card}>
                         <h3>Upcoming Exams</h3>
                         <ul className={styles.activityList}>
-                            {userData.upcomingExams.map((exam, i) => (
-                                <li key={i}>
-                                    <span>{exam.name}</span>
-                                    <span className={styles.examDate}>{exam.date}</span>
-                                </li>
-                            ))}
+                            {userData.upcomingExams.length === 0 ? (
+                                <li>No upcoming exams. Add one!</li>
+                            ) : (
+                                userData.upcomingExams.map((exam, i) => (
+                                    <li key={i}>
+                                        <span>{exam.name}</span>
+                                        <span className={styles.examDate}>{exam.date}</span>
+                                    </li>
+                                ))
+                            )}
                         </ul>
                     </div>
                 </div>
+
                 <div className={styles.footer}>
                     <p>© 2026 AURA — Adaptive Universal Resource for Achievement</p>
                 </div>

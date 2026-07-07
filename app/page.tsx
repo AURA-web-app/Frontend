@@ -1,14 +1,52 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./style/theme.css";
 import "./style/landing.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "../lib/supabase/createclient";
 
 export default function HomePage() {
     const router = useRouter();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
+    const [dontShowAgain, setDontShowAgain] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const loggedIn = !!session;
+            setIsLoggedIn(loggedIn);
+            setLoading(false);
+            if (loggedIn) {
+                const skip = localStorage.getItem("aura_skip_landing_prompt") === "true";
+                if (!skip) {
+                    setShowPopup(true);
+                }
+            }
+        };
+        checkAuth();
+
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            const loggedIn = !!session;
+            setIsLoggedIn(loggedIn);
+            if (loggedIn) {
+                const skip = localStorage.getItem("aura_skip_landing_prompt") === "true";
+                if (!skip) {
+                    setShowPopup(true);
+                }
+            } else {
+                setShowPopup(false);
+            }
+        });
+
+        return () => {
+            listener?.subscription.unsubscribe();
+        };
+    }, []);
 
     useEffect(() => {
         const navbar = document.getElementById("navbar");
@@ -29,6 +67,21 @@ export default function HomePage() {
         const loginBtn = document.getElementById("loginBtn");
         navLinks?.classList.toggle("open");
         loginBtn?.classList.toggle("show-mobile");
+    };
+
+    const handleGoToDashboard = () => {
+        if (dontShowAgain) {
+            localStorage.setItem("aura_skip_landing_prompt", "true");
+        }
+        setShowPopup(false);
+        router.push("/dashboard");
+    };
+
+    const handleStay = () => {
+        if (dontShowAgain) {
+            localStorage.setItem("aura_skip_landing_prompt", "true");
+        }
+        setShowPopup(false);
     };
 
     const features = [
@@ -64,6 +117,8 @@ export default function HomePage() {
         },
     ];
 
+    if (loading) return null;
+
     return (
         <main className="landing">
             <div className="ambient-orbs">
@@ -84,8 +139,14 @@ export default function HomePage() {
                     <a href="/timer" onClick={() => document.getElementById("navLinks")?.classList.remove("open")}>Timer</a>
                 </div>
                 <div className="nav-actions">
-                    <button className="login-btn" id="loginBtn" onClick={() => router.push("/login")}>Login</button>
-                    <button className="signup-btn" onClick={() => router.push("/signup")}>Sign Up</button>
+                    {!isLoggedIn ? (
+                        <>
+                            <button className="login-btn" id="loginBtn" onClick={() => router.push("/login")}>Login</button>
+                            <button className="signup-btn" onClick={() => router.push("/signup")}>Sign Up</button>
+                        </>
+                    ) : (
+                        <button className="signup-btn" onClick={() => router.push("/dashboard")}>Dashboard</button>
+                    )}
                     <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Toggle menu">
                         <span /><span /><span />
                     </button>
@@ -240,6 +301,31 @@ export default function HomePage() {
                 © 2026 <span>AURA</span> — Adaptive Universal Resource for Achievement. All rights reserved.
                 <span className="sparkle"> ✦</span>
             </div>
+
+            {showPopup && (
+                <div className="popup-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowPopup(false); }}>
+                    <div className="popup-card">
+                        <h2>You're already logged in!</h2>
+                        <p>Would you like to go to your dashboard?</p>
+                        <div className="popup-actions">
+                            <button className="popup-btn primary" onClick={handleGoToDashboard}>
+                                Yes, take me there
+                            </button>
+                            <button className="popup-btn secondary" onClick={handleStay}>
+                                No, stay here
+                            </button>
+                        </div>
+                        <label className="popup-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={dontShowAgain}
+                                onChange={(e) => setDontShowAgain(e.target.checked)}
+                            />
+                            Don't show this again
+                        </label>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

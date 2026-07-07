@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 
 function getSupabaseConfig() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
         return null;
@@ -32,13 +32,12 @@ export async function POST(request: Request) {
         const config = getSupabaseConfig();
 
         if (!config) {
-        return NextResponse.json(
-            {
-            error:
-                "Missing SUPABASE_URL or SUPABASE_ANON_KEY in your environment file.",
-            },
-            { status: 500 },
-        );
+            return NextResponse.json(
+                {
+                    error: "Missing SUPABASE_URL or SUPABASE_ANON_KEY in your environment file.",
+                },
+                { status: 500 }
+            );
         }
 
         const body = await request.json();
@@ -53,32 +52,32 @@ export async function POST(request: Request) {
             const response = await fetch(`${config.supabaseUrl}/auth/v1/otp`, {
                 method: "POST",
                 headers: {
-                apikey: config.supabaseAnonKey,
-                Authorization: `Bearer ${config.supabaseAnonKey}`,
-                "Content-Type": "application/json",
+                    apikey: config.supabaseAnonKey,
+                    Authorization: `Bearer ${config.supabaseAnonKey}`,
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                email,
-                create_user: true,
+                    email,
+                    create_user: true,
                 }),
             });
 
             const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
+                console.error("Supabase OTP send error:", response.status, data);
                 return NextResponse.json(
-                {
-                    error:
-                    data.error_description || data.msg || data.error || "Failed to send code.",
-                },
-                { status: response.status },
+                    {
+                        error: data.error_description || data.msg || data.error || "Failed to send code.",
+                    },
+                    { status: response.status }
                 );
             }
 
             return NextResponse.json({ success: true });
         }
 
-            if (action === "verify") {
+        if (action === "verify") {
             const token = typeof body.token === "string" ? body.token.trim() : "";
 
             if (!token) {
@@ -88,26 +87,26 @@ export async function POST(request: Request) {
             const response = await fetch(`${config.supabaseUrl}/auth/v1/verify`, {
                 method: "POST",
                 headers: {
-                apikey: config.supabaseAnonKey,
-                Authorization: `Bearer ${config.supabaseAnonKey}`,
-                "Content-Type": "application/json",
+                    apikey: config.supabaseAnonKey,
+                    Authorization: `Bearer ${config.supabaseAnonKey}`,
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                email,
-                token,
-                type: "email",
+                    email,
+                    token,
+                    type: "email",
                 }),
             });
 
             const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
+                console.error("Supabase OTP verify error:", response.status, data);
                 return NextResponse.json(
-                {
-                    error:
-                    data.error_description || data.msg || data.error || "Failed to verify code.",
-                },
-                { status: response.status },
+                    {
+                        error: data.error_description || data.msg || data.error || "Failed to verify code.",
+                    },
+                    { status: response.status }
                 );
             }
 
