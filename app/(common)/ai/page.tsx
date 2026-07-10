@@ -21,6 +21,7 @@ export default function AIChat() {
     const [error, setError] = useState<string | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [flawNotice, setFlawNotice] = useState(false);
     const chatBoxRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -84,6 +85,7 @@ export default function AIChat() {
         setInput("");
         setIsTyping(true);
         setError(null);
+        setFlawNotice(false);
 
         try {
             const headers: HeadersInit = {
@@ -109,6 +111,11 @@ export default function AIChat() {
                 return;
             }
 
+            if (data.flawRedirected) {
+                setFlawNotice(true);
+                setSelectedModel("openrouter");
+            }
+
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "ai",
@@ -131,13 +138,13 @@ export default function AIChat() {
     };
 
     const modelOptions: { value: AIModel; label: string }[] = [
-        { value: "flaw", label: "FLAW (unlimited, free)" },
+        { value: "flaw", label: "FLAW (Currently Unavailable)" },
     ];
     if (isAuthenticated) {
         modelOptions.push(
-            { value: "openrouter", label: "OpenRouter (Gemini 2 Flash)" },
-            { value: "github", label: "GitHub (GPT-4o-mini)" },
-            { value: "groq", label: "Groq (Mixtral 8x7b)" }
+            { value: "openrouter", label: "Gemini 2 Flash" },
+            { value: "github", label: "DeepSeek V3" },
+            { value: "groq", label: "Mixtral 8x7b" }
         );
     }
 
@@ -172,6 +179,16 @@ export default function AIChat() {
                 )}
                 {isAuthenticated && (
                     <p className="user-note">✅ Logged in – {remaining !== null ? remaining : "..."} advanced messages left today.</p>
+                )}
+                {flawNotice && (
+                    <div className="flaw-notice">
+                        ⚠️ FLAW is currently unavailable. Your request was handled by <strong>OpenRouter</strong> instead.
+                    </div>
+                )}
+                {selectedModel === "flaw" && (
+                    <div className="flaw-warning">
+                        ⚠️ FLAW is temporarily offline. Please select <strong>OpenRouter</strong> or another model.
+                    </div>
                 )}
             </div>
 

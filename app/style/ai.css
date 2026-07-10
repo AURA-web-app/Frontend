@@ -410,3 +410,33 @@
     color: #ef4444;
     margin-top: 0.5rem;
 }
+.flaw-notice {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    color: #ef4444;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.flaw-warning {
+    background: rgba(249, 115, 22, 0.1);
+    border: 1px solid rgba(249, 115, 22, 0.25);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    color: #f97316;
+    margin-top: 0.3rem;
+    text-align: center;
+}
+
+.flaw-warning strong,
+.flaw-notice strong {
+    color: #10b981;
+}
+
+.model-selector option:disabled {
+    color: #5e5e5e;
+}

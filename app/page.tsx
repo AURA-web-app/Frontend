@@ -166,7 +166,7 @@ export default function HomePage() {
                 </p>
                 <div className="hero-buttons">
                     <button className="primary-btn primary-btn-lg" onClick={() => router.push("/signup")}>Get Your AURA</button>
-                    <button className="secondary-btn">Watch Demo</button>
+                    <button className="secondary-btn" onClick={() => router.push("/demo")}>Watch Demo</button>
                 </div>
                 <div className="hero-stats">
                     <div className="stat-card">

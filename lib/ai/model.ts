@@ -6,8 +6,8 @@ const GROQ_API_KEY = process.env.GROQ;
 const FLAW_API_URL = process.env.FLAW;
 
 const OPENROUTER_MODEL = "openrouter/free";
-const GITHUB_MODEL = "github/gpt-4o-mini";
-const GROQ_MODEL = "mixtral-8x7b-32768";
+const GITHUB_MODEL = "deepseek/deepseek-v3-0324";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 function getSmartMock(prompt: string): string {
     const lower = prompt.toLowerCase();
@@ -82,37 +82,47 @@ export async function callOpenRouter(messages: Message[]): Promise<string> {
 }
 
 export async function callGitHub(messages: Message[]): Promise<string> {
-    if (!OPENROUTER_API_KEY) {
-        console.warn("OPENROUTER_API_KEY missing – GitHub mock");
+    if (!GITHUB_TOKEN) {
+        console.warn("GITHUB_TOKEN missing – using mock");
         return `[GitHub mock] ${getSmartMock(messages[messages.length-1]?.content || "")}`;
     }
     try {
-        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const res = await fetch("https://models.github.ai/inference/chat/completions", {
             method: "POST",
             headers: {
+                "Accept": "application/vnd.github+json",
+                "Authorization": `Bearer ${GITHUB_TOKEN}`,
+                "X-GitHub-Api-Version": "2026-03-10",
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-                "X-Title": "AURA Study Assistant",
             },
             body: JSON.stringify({
                 model: GITHUB_MODEL,
                 messages: formatMessages(messages),
                 temperature: 0.7,
+                max_tokens: 1024,
             }),
         });
+
         const responseText = await res.text();
         let data;
         try {
             data = JSON.parse(responseText);
         } catch {
-            throw new Error(`Invalid JSON response: ${responseText.slice(0, 200)}`);
+            console.error("GitHub invalid JSON:", responseText.slice(0, 300));
+            return `[GitHub error] Invalid JSON response: ${responseText.slice(0, 100)}`;
         }
+
         if (!res.ok) {
-            const errorMsg = data.error?.message || data.error || `HTTP ${res.status}`;
-            console.error("GitHub via OpenRouter error:", res.status, errorMsg);
-            return `[GitHub fallback] ${getSmartMock(messages[messages.length-1]?.content || "")}`;
+            const errorMsg = data.error?.message || data.error || JSON.stringify(data);
+            console.error("GitHub API error:", res.status, errorMsg);
+            return `[GitHub error ${res.status}: ${errorMsg}]`;
         }
+
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            console.error("GitHub unexpected response:", data);
+            return `[GitHub error] Unexpected response structure`;
+        }
+
         return data.choices[0].message.content;
     } catch (err) {
         console.error("GitHub fetch error:", err);
@@ -136,20 +146,30 @@ export async function callGroq(messages: Message[]): Promise<string> {
                 model: GROQ_MODEL,
                 messages: formatMessages(messages),
                 temperature: 0.7,
+                max_tokens: 1024,
             }),
         });
+
         const responseText = await res.text();
         let data;
         try {
             data = JSON.parse(responseText);
         } catch {
-            throw new Error(`Invalid JSON response: ${responseText.slice(0, 200)}`);
+            console.error("Groq invalid JSON:", responseText.slice(0, 300));
+            return `[Groq error] Invalid JSON response: ${responseText.slice(0, 100)}`;
         }
+
         if (!res.ok) {
-            const errorMsg = data.error?.message || data.error || `HTTP ${res.status}`;
+            const errorMsg = data.error?.message || data.error || JSON.stringify(data);
             console.error("Groq API error:", res.status, errorMsg);
-            return `[Groq fallback] ${getSmartMock(messages[messages.length-1]?.content || "")}`;
+            return `[Groq error ${res.status}: ${errorMsg}]`;
         }
+
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            console.error("Groq unexpected response:", data);
+            return `[Groq error] Unexpected response structure`;
+        }
+
         return data.choices[0].message.content;
     } catch (err) {
         console.error("Groq fetch error:", err);
