@@ -12,7 +12,16 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
-
+    const handleOAuth = async (provider: "google") => {
+        const redirectTo = `${window.location.origin}/auth/callback`;
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider,
+            options: { redirectTo }
+        });
+        if (error) {
+            setError(error.message);
+        }
+    };
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -42,6 +51,16 @@ export default function LoginPage() {
                 </div>
                 {error && <div className="auth-error">{error}</div>}
                 <form onSubmit={handleSubmit} className="auth-form">
+                    <span className="beta-badge">BETA</span>
+                    <div className="oauth-form">
+                        <button type="button" className="primary-btn primary-btn-lg" onClick={() => handleOAuth("google")}>
+                            <img src="/google.png" alt="Google icon" className="oauth-icon" style={{ width: "30px", height: "30px" }} />
+                            Sign in with Google
+                        </button>
+                    </div>
+                    <div className="divider">
+                        <span><hr></hr></span>
+                    </div>
                     <div className="form-group">
                         <label htmlFor="email">Email</label>
                         <input

@@ -313,6 +313,26 @@ body::before {
     flex-shrink: 0;
 }
 
+.oauth-form {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.01rem;
+    border-radius: 18px;
+    border: none;
+    background: transparent;
+}
+
+.oauth-form img {
+    border-radius: 50%;
+    margin-right: 0.8rem;
+    align-self: center;
+    background: #fff;
+}
+
+.divider {
+    margin: 1.5rem 0;
+}
+
 @media (max-width: 480px) {
     .otp-box {
         width: 48px;

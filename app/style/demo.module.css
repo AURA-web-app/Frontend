@@ -118,12 +118,25 @@
 }
 
 .videoWrapper {
+    position: relative;
+    width: 100%;
     max-width: 800px;
     margin: 0 auto;
     border-radius: 24px;
     overflow: hidden;
+    background: #0a0a1a;
     border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.videoPlayer {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 16/9;
+    background: #0a0a1a;
+    object-fit: cover;
+    cursor: pointer;
 }
 
 .videoPlaceholder {
@@ -137,7 +150,7 @@
     position: relative;
 }
 
-.playIcon {
+.videoPlaceholder .playIcon {
     width: 80px;
     height: 80px;
     border-radius: 50%;
@@ -149,7 +162,7 @@
     cursor: pointer;
 }
 
-.playIcon:hover {
+.videoPlaceholder .playIcon:hover {
     background: rgba(16, 185, 129, 0.35);
     transform: scale(1.05);
 }
@@ -157,6 +170,104 @@
 .videoLabel {
     color: #a0a0a0;
     font-size: 0.9rem;
+}
+
+.videoOverlayBtn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+    z-index: 2;
+}
+
+.videoOverlayBtn:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.videoOverlayBtn .playIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: rgba(16, 185, 129, 0.9);
+    border-radius: 50%;
+    transition: transform 0.3s ease, background 0.3s ease;
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.4);
+}
+
+.videoOverlayBtn .playIcon:hover {
+    transform: scale(1.1);
+    background: rgba(16, 185, 129, 1);
+}
+
+.videoOverlayBtn .playIcon svg {
+    margin-left: 6px;
+}
+
+.videoControls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 3;
+}
+
+.videoWrapper:hover .videoControls {
+    opacity: 1;
+}
+
+.controlBtn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: transform 0.2s ease;
+}
+
+.controlBtn:hover {
+    transform: scale(1.1);
+}
+
+.progressBar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+}
+
+.progressFill {
+    height: 100%;
+    background: #10b981;
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}
+
+.videoTime {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    min-width: 70px;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 .walkthrough {
@@ -388,10 +499,6 @@
     font-weight: 600;
 }
 
-.examStatus:contains("●") {
-    color: #10b981;
-}
-
 .examDuration {
     color: #a0a0a0;
     font-size: 0.75rem;
@@ -493,10 +600,67 @@
         flex-direction: column;
         gap: 1rem;
     }
+    .videoWrapper {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+
+    .videoOverlayBtn .playIcon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .videoOverlayBtn .playIcon svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .videoControls {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .controlBtn {
+        font-size: 16px;
+        padding: 2px 6px;
+    }
+
+    .videoTime {
+        font-size: 10px;
+        min-width: 60px;
+    }
 }
 
 @media (max-width: 480px) {
     .stepsContainer {
         grid-template-columns: 1fr;
+    }
+
+    .videoOverlayBtn .playIcon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .videoOverlayBtn .playIcon svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .videoControls {
+        padding: 6px 10px;
+        gap: 6px;
+    }
+
+    .controlBtn {
+        font-size: 14px;
+    }
+
+    .progressBar {
+        height: 3px;
+    }
+
+    .videoTime {
+        font-size: 9px;
+        min-width: 50px;
     }
 }

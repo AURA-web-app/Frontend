@@ -8,7 +8,9 @@ import styles from "../../style/demo.module.css";
 export default function DemoPage() {
     const router = useRouter();
     const [activeStep, setActiveStep] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(true);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [videoError, setVideoError] = useState(false);
+    const [isVideoLoaded, setIsVideoLoaded] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
 
     const steps = [
@@ -55,12 +57,42 @@ export default function DemoPage() {
         if (videoRef.current) {
             if (isPlaying) {
                 videoRef.current.pause();
+                setIsPlaying(false);
             } else {
-                videoRef.current.play();
+                videoRef.current.play().catch((error) => {
+                    console.error('Play error:', error);
+                    setVideoError(true);
+                });
+                setIsPlaying(true);
             }
-            setIsPlaying(!isPlaying);
         }
     };
+
+    const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+        const video = e.currentTarget;
+        const error = video.error;
+        console.error('Video error code:', error?.code);
+        console.error('Video error message:', error?.message);
+        setVideoError(true);
+        setIsVideoLoaded(false);
+    };
+
+    const handleVideoLoaded = () => {
+        setIsVideoLoaded(true);
+        setVideoError(false);
+    };
+
+    // Auto-play video when loaded
+    useEffect(() => {
+        if (isVideoLoaded && videoRef.current) {
+            videoRef.current.play().then(() => {
+                setIsPlaying(true);
+            }).catch(() => {
+                // Auto-play was prevented, user will need to click play
+                setIsPlaying(false);
+            });
+        }
+    }, [isVideoLoaded]);
 
     return (
         <div className={styles.demo}>
@@ -75,14 +107,72 @@ export default function DemoPage() {
                         Watch how AURA transforms learning with AI-powered tools.
                     </p>
                     <div className={styles.videoWrapper}>
-                        <div className={styles.videoPlaceholder}>
-                            <div className={styles.playIcon}>
-                                <svg viewBox="0 0 24 24" width="64" height="64" fill="white">
-                                    <polygon points="5,3 19,12 5,21" />
-                                </svg>
+                        <video
+                            ref={videoRef}
+                            className={styles.videoPlayer}
+                            poster="/video-poster.jpg"
+                            autoPlay
+                            muted
+                            onClick={togglePlay}
+                            loop
+                            playsInline
+                            preload="metadata"
+                            onError={handleVideoError}
+                            onPlay={() => setIsPlaying(true)}
+                            onPause={() => setIsPlaying(false)}
+                            onLoadedData={handleVideoLoaded}
+                            style={{ display: videoError ? 'none' : 'block' }}
+                        >
+                            <source src="/demo.mp4" type="video/mp4" />
+                            Your browser does not support the video tag.
+                        </video>
+                        {!videoError && !isVideoLoaded && (
+                            <div className={styles.videoLoading}>
+                                <div className={styles.loadingSpinner} />
+                                <p>Loading video...</p>
                             </div>
-                            <p className={styles.videoLabel}>Demo Video</p>
-                        </div>
+                        )}
+                        {videoError && (
+                            <div className={styles.videoPlaceholder}>
+                                <div className={styles.playIcon}>
+                                    <svg viewBox="0 0 24 24" width="64" height="64" fill="white">
+                                        <polygon points="5,3 19,12 5,21" />
+                                    </svg>
+                                </div>
+                                <p className={styles.videoLabel}>Demo Video</p>
+                                <p className={styles.videoLabel} style={{ fontSize: '0.8rem', opacity: 0.6 }}>
+                                    Please add demo.mp4 to /public folder
+                                </p>
+                            </div>
+                        )}
+                        {!videoError && isVideoLoaded && !isPlaying && (
+                            <button 
+                                className={styles.videoOverlayBtn}
+                                onClick={togglePlay}
+                                aria-label="Play video"
+                            >
+                                <div className={styles.playIcon}>
+                                    <svg viewBox="0 0 24 24" width="64" height="64" fill="white">
+                                        <polygon points="5,3 19,12 5,21" />
+                                    </svg>
+                                </div>
+                            </button>
+                        )}
+                        {!videoError && isVideoLoaded && (
+                            <div className={styles.videoControls}>
+                                <button 
+                                    className={styles.controlBtn}
+                                    onClick={togglePlay}
+                                    aria-label={isPlaying ? "Pause" : "Play"}
+                                >
+                                    {isPlaying ? "⏸" : "▶️"}
+                                </button>
+                                <div className={styles.progressBar}>
+                                    <div className={styles.progressFill} style={{ width: '30%' }} />
+                                </div>
+                                <span className={styles.videoTime}>00:00 / 02:30</span>
+                            </div>
+                        )}
                     </div>
                 </section>
                 <section className={styles.walkthrough}>

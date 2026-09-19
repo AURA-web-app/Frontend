@@ -18,7 +18,6 @@ export default function SignupPage() {
     const [error, setError] = useState<string | null>(null);
     const [warning, setWarning] = useState<string | null>(null);
     const [otpCode, setOtpCode] = useState("");
-    const router = useRouter();
     const isPasswordValid = (pwd: string) => pwd.length >= 8;
 
     useEffect(() => {

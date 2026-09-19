@@ -135,7 +135,7 @@ export default function Dashboard() {
     const quickLinks = [
         { href: "/ai", label: "AI Assistant", icon: "🤖", color: "#10b981" },
         { href: "/timer", label: "Study Timer", icon: "⏱️", color: "#f97316" },
-        { href: "/exam-portal", label: "Exam Portal", icon: "📝", color: "#8b5cf6" },
+        { href: "/exam  ", label: "Exam Portal", icon: "📝", color: "#8b5cf6" },
         { href: "/courses", label: "My Courses", icon: "📚", color: "#3b82f6" },
         { href: "/calendar", label: "Calendar", icon: "📅", color: "#facc15" },
     ];
