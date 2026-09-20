@@ -17,6 +17,15 @@ export default function HomePage() {
 
     useEffect(() => {
         const checkAuth = async () => {
+            const code = new URLSearchParams(window.location.search).get("code");
+            if (code) {
+                const { error } = await supabase.auth.exchangeCodeForSession(code);
+                if (!error) {
+                    router.replace("/dashboard");
+                    return;
+                }
+            }
+
             const { data: { session } } = await supabase.auth.getSession();
             const loggedIn = !!session;
             setIsLoggedIn(loggedIn);

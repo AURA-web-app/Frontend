@@ -13,7 +13,7 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const handleOAuth = async (provider: "google") => {
-        const redirectTo = `${window.location.origin}/auth/callback`;
+        const redirectTo = `${window.location.origin}/auth/fallback`;
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
             options: { redirectTo }
