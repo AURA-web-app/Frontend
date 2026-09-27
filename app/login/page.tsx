@@ -55,7 +55,7 @@ export default function LoginPage() {
                     <div className="oauth-form">
                         <button type="button" className="primary-btn primary-btn-lg" onClick={() => handleOAuth("google")}>
                             <img src="/google.png" alt="Google icon" className="oauth-icon" style={{ width: "30px", height: "30px" }} />
-                            Sign in with Google
+                            Login with Google
                         </button>
                     </div>
                     <div className="divider">

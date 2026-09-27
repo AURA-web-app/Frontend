@@ -47,6 +47,7 @@ export default function Timer() {
     const [timezone, setTimezone] = useState<string>(getBrowserTimezone());
     const [showTimezoneModal, setShowTimezoneModal] = useState(false);
     const animFrameRef = useRef<number>(0);
+    const stoppedSessionRef = useRef<number | null>(null);
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);
         checkMobile();
@@ -89,6 +90,32 @@ export default function Timer() {
         const timer = setInterval(() => setLiveTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
+    useEffect(() => {
+        const stopSessionWhenLeavingTab = () => {
+            if (currentSessionStart === null || stoppedSessionRef.current === currentSessionStart) return;
+
+            const end = Date.now();
+            stoppedSessionRef.current = currentSessionStart;
+            setSessions((previousSessions) => {
+                const updatedSessions = previousSessions.map((session) =>
+                    session.start === currentSessionStart && session.end === null
+                        ? { ...session, end }
+                        : session
+                );
+                localStorage.setItem("aura-study-sessions", JSON.stringify(updatedSessions));
+                return updatedSessions;
+            });
+            setCurrentSessionStart(null);
+            setElapsed(0);
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "hidden") stopSessionWhenLeavingTab();
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [currentSessionStart]);
     useEffect(() => {
         const todayMidnight = new Date();
         todayMidnight.setHours(0, 0, 0, 0);

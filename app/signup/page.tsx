@@ -18,6 +18,17 @@ export default function SignupPage() {
     const [error, setError] = useState<string | null>(null);
     const [warning, setWarning] = useState<string | null>(null);
     const [otpCode, setOtpCode] = useState("");
+    const router = useRouter();
+    const handleOAuth = async (provider: "google") => {
+            const redirectTo = `${window.location.origin}/auth/fallback`;
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider,
+                options: { redirectTo }
+            });
+            if (error) {
+                setError(error.message);
+            }
+        };
     const isPasswordValid = (pwd: string) => pwd.length >= 8;
 
     useEffect(() => {
@@ -98,19 +109,18 @@ export default function SignupPage() {
             const res = await fetch("/api/email", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "verify", email, token: code }),
+                body: JSON.stringify({ action: "verify", email, token: code, name, password }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Verification failed.");
 
-            const { error: signUpError } = await supabase.auth.signUp({
-                email,
-                password,
-                options: { data: { full_name: name } },
+            const { error: sessionError } = await supabase.auth.setSession({
+                access_token: data.access_token,
+                refresh_token: data.refresh_token,
             });
-            if (signUpError) throw new Error(signUpError.message);
+            if (sessionError) throw new Error(sessionError.message);
 
-            setStep("done");
+            router.push("/dashboard");
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -146,6 +156,15 @@ export default function SignupPage() {
                 )}
 
                 <form onSubmit={handleSendOtp} className="auth-form">
+                    <div className="oauth-form">
+                        <button type="button" className="primary-btn primary-btn-lg" onClick={() => handleOAuth("google")}>
+                            <img src="/google.png" alt="Google icon" className="oauth-icon" style={{ width: "30px", height: "30px" }} />
+                            Register with Google
+                        </button>
+                    </div>
+                    <div className="divider">
+                        <span><hr></hr></span>
+                    </div>
                     <div className="form-group">
                         <label htmlFor="name">Full name</label>
                         <input

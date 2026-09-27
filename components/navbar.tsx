@@ -67,6 +67,7 @@ export default function Nav() {
             <Link href="/ai" onClick={closeMenu}>AI</Link>
             <Link href="/timer" onClick={closeMenu}>Timer</Link>
             <Link href="/courses" onClick={closeMenu}>Courses</Link>
+            <Link href="/calendar" onClick={closeMenu}>Calendar</Link>
             <div className={styles.profileDropdown}>
                 <button className={styles.profileBtn} onClick={toggleMenu}>
                     {session?.user?.email?.[0]?.toUpperCase() || "U"}

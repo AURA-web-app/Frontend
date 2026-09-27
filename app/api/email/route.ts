@@ -1,30 +1,16 @@
 import { NextResponse } from "next/server";
-import crypto from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 
 function getSupabaseConfig() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
         return null;
     }
 
-    return { supabaseUrl, supabaseAnonKey };
-}
-
-function getVerificationSecret() {
-    return process.env.EMAIL_VERIFICATION_SECRET || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "fallback-verification-secret";
-}
-
-function signEmail(email: string) {
-    return crypto
-        .createHmac("sha256", getVerificationSecret())
-        .update(email)
-        .digest("base64url");
-}
-
-function buildVerifiedEmailCookie(email: string) {
-    return `${email}::${signEmail(email)}`;
+    return { supabaseUrl, supabaseAnonKey, supabaseServiceRoleKey };
 }
 
 export async function POST(request: Request) {
@@ -79,9 +65,11 @@ export async function POST(request: Request) {
 
         if (action === "verify") {
             const token = typeof body.token === "string" ? body.token.trim() : "";
+            const password = typeof body.password === "string" ? body.password : "";
+            const name = typeof body.name === "string" ? body.name.trim() : "";
 
-            if (!token) {
-                return NextResponse.json({ error: "Code is required." }, { status: 400 });
+            if (!token || !password || !name) {
+                return NextResponse.json({ error: "Code, name, and password are required." }, { status: 400 });
             }
 
             const response = await fetch(`${config.supabaseUrl}/auth/v1/verify`, {
@@ -110,16 +98,35 @@ export async function POST(request: Request) {
                 );
             }
 
-            const nextResponse = NextResponse.json({ success: true });
-            nextResponse.cookies.set("verified_email", buildVerifiedEmailCookie(email), {
-                httpOnly: true,
-                sameSite: "lax",
-                secure: process.env.NODE_ENV === "production",
-                path: "/",
-                maxAge: 60 * 15,
+            const verificationData = data as {
+                access_token?: string;
+                refresh_token?: string;
+                user?: { id?: string };
+            };
+            const userId = verificationData.user?.id;
+
+            if (!verificationData.access_token || !verificationData.refresh_token || !userId) {
+                return NextResponse.json({ error: "Verification succeeded, but no session was returned." }, { status: 502 });
+            }
+
+            const supabaseAdmin = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
+                auth: { autoRefreshToken: false, persistSession: false },
+            });
+            const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+                password,
+                user_metadata: { full_name: name },
             });
 
-            return nextResponse;
+            if (updateError) {
+                console.error("Supabase signup user update error:", updateError);
+                return NextResponse.json({ error: "Account verification succeeded, but setup failed." }, { status: 500 });
+            }
+
+            return NextResponse.json({
+                success: true,
+                access_token: verificationData.access_token,
+                refresh_token: verificationData.refresh_token,
+            });
         }
 
         return NextResponse.json({ error: "Invalid action." }, { status: 400 });
